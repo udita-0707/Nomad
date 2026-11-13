@@ -37,3 +37,27 @@ All data is synthetic, except the photos (real photos with free licenses; see `i
 ## Questions
 
 Read the FAQ at the end of `DATA_DICTIONARY.md` first. Then ask at the help desk or in the event chat channel. We send every answer to all teams.
+
+## Running Nomad (our app)
+
+Needs Node 20.12+ and Docker (for Postgres).
+
+```bash
+cp .env.example .env
+npm install
+docker compose up -d        # Postgres 16 on localhost:5432
+npm run db:migrate          # create users and sessions tables
+npm run dev                 # API on :4000, web on :5173
+```
+
+Open http://localhost:5173. Check the API with http://localhost:5173/api/health.
+
+| Folder | What |
+|---|---|
+| `apps/web` | React + TypeScript + Vite frontend |
+| `apps/api` | Express + TypeScript API, Drizzle ORM on Postgres |
+| `packages/shared` | Zod schemas and types used by both apps |
+| `docs/api-contract.md` | Request/response formats both teams build against |
+
+After changing `apps/api/src/db/schema.ts`, run `npm run db:generate` then `npm run db:migrate`.
+Other scripts: `npm run typecheck`, `npm run lint`, `npm run format`.
