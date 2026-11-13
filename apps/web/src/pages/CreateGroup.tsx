@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { DESTINATION_CITIES, GROUP_DATE_MAX, GROUP_DATE_MIN, groupCreateRequestSchema } from '@nomad/shared';
 import { Logo } from '../components/Logo';
 import { api, ApiError } from '../lib/api';
+import { useCatalog } from '../lib/useCatalog';
 
 const initialForm = {
   name: '',
@@ -22,6 +23,18 @@ export function CreateGroup() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const { data: catalog, isLoading: catalogLoading, isError: catalogError } = useCatalog();
+  const [countryCode, setCountryCode] = useState('JP');
+
+  const countries = Array.from(new Map((catalog?.destinationCities ?? []).map((city) => [city.countryCode, { code: city.countryCode, name: city.countryName }])).values()).sort((a, b) => a.name.localeCompare(b.name));
+  const countryCities = (catalog?.destinationCities ?? []).filter((city) => city.countryCode === countryCode);
+
+  useEffect(() => {
+    if (catalog && !countryCities.some((city) => city.name === form.city)) {
+      const firstCity = countryCities[0]?.name;
+      if (firstCity) update('city', firstCity);
+    }
+  }, [catalog, countryCode]);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -77,7 +90,11 @@ export function CreateGroup() {
           <div className="group-form-heading"><p className="eyebrow">Your group post</p><h2>Set the details.</h2></div>
           {error && <p className="form-error" role="alert">{error}</p>}
           <label>Group name <input value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="e.g. Kyoto Spring Temples" aria-invalid={Boolean(fieldErrors.name)} />{fieldErrors.name && <small className="field-error">{fieldErrors.name}</small>}</label>
-          <label>Destination <select value={form.city} onChange={(event) => update('city', event.target.value as typeof form.city)}>{DESTINATION_CITIES.map((city) => <option key={city} value={city}>{city}</option>)}</select>{fieldErrors.city && <small className="field-error">{fieldErrors.city}</small>}</label>
+          {catalogError && <p className="form-error" role="alert">Could not load destination countries and cities. Refresh to try again.</p>}
+          <div className="group-form-grid">
+            <label>Country <select value={countryCode} onChange={(event) => { setCountryCode(event.target.value); const firstCity = catalog?.destinationCities.find((city) => city.countryCode === event.target.value)?.name; if (firstCity) update('city', firstCity); }} disabled={catalogLoading || countries.length === 0}>{countries.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
+            <label>Destination city <select value={form.city} onChange={(event) => update('city', event.target.value as typeof form.city)} disabled={catalogLoading || countryCities.length === 0}>{countryCities.map((city) => <option key={city.name} value={city.name}>{city.name}</option>)}</select>{fieldErrors.city && <small className="field-error">{fieldErrors.city}</small>}</label>
+          </div>
           <div className="group-form-grid">
             <label>Check-in <input type="date" min={GROUP_DATE_MIN} max={GROUP_DATE_MAX} value={form.checkIn} onChange={(event) => update('checkIn', event.target.value)} aria-invalid={Boolean(fieldErrors.checkIn)} />{fieldErrors.checkIn && <small className="field-error">{fieldErrors.checkIn}</small>}</label>
             <label>Check-out <input type="date" min={GROUP_DATE_MIN} max={GROUP_DATE_MAX} value={form.checkOut} onChange={(event) => update('checkOut', event.target.value)} aria-invalid={Boolean(fieldErrors.checkOut)} />{fieldErrors.checkOut && <small className="field-error">{fieldErrors.checkOut}</small>}</label>
