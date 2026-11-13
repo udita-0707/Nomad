@@ -7,6 +7,7 @@ import { ProfileSetup } from './pages/ProfileSetup';
 import { CreateGroup } from './pages/CreateGroup';
 import { SearchPage } from './pages/Search';
 import { MatchesPage } from './pages/Matches';
+import { GroupPlanPage } from './pages/GroupPlan';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -52,6 +53,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <MatchesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/:id/plan"
+        element={
+          <ProtectedRoute requireProfile>
+            <GroupPlanPage />
           </ProtectedRoute>
         }
       />
