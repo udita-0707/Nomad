@@ -107,3 +107,11 @@ Entry format:
 - Why: each milestone can be reviewed and merged on its own without changing the contract.
 - Trade-off / revisit if: on the M3 branch alone a search shows no groups; merge M4 right after M3.
 - Files: packages/shared/src/index.ts, apps/api/src/controllers/{catalogController,searchController}.ts, apps/api/src/routes/{catalog,searches}.ts, apps/api/src/app.ts, apps/web/src/lib/{api,useCatalog,useSearch}.ts, apps/web/src/pages/{Search,Dashboard,ProfileSetup}.tsx, apps/web/src/App.tsx, apps/web/src/styles.css, docs/api-contract.md
+
+## D-013 | 2026-11-13 18:45 | M4 match list from one ranked SQL query
+- Context: M4 lists groups that pass all six rules; new M2 groups had no owner membership, so the query counted them as 0 members and skipped the owner in the gender check.
+- Decision: services/matching.ts runs docs/match-groups.sql with bound parameters; POST /api/searches now returns the ranked matches and GET /api/searches/:id/matches re-runs a saved search (404 for unknown, non-uuid or another traveller's id); ranking is shared interests, shared nights, budget gap, check-in, id (P3); createGroup saves the owner as an approved member in one transaction and migration 0005 backfills older groups (P1); /search/:id shows each match with a reason line.
+- Rejected: matching in JavaScript (slower, and the SQL was already cross-checked), counting the owner separately in SQL (two code paths for seeded and new groups), a weighted score (harder to explain at the demo).
+- Why: one tested query gives correct results, and new groups match exactly like seeded ones.
+- Trade-off / revisit if: no pagination (12 seeded groups); revisit ranking if judges ask for a score.
+- Files: apps/api/src/services/matching.ts, apps/api/src/controllers/{searchController,groupController}.ts, apps/api/src/routes/searches.ts, apps/api/drizzle/0005_owner_memberships.sql, apps/api/drizzle/meta/*, apps/web/src/lib/{api,useSearch}.ts, apps/web/src/pages/{Search,Matches}.tsx, apps/web/src/App.tsx, apps/web/src/styles.css, docs/api-contract.md

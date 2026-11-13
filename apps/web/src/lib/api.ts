@@ -58,4 +58,5 @@ export const api = {
   getCatalog: () => request<CatalogResponse>('/catalog'),
   createSearch: (body: SearchRequest) =>
     request<SearchResponse>('/searches', { method: 'POST', body: JSON.stringify(body) }),
+  getSearchMatches: (id: string) => request<SearchResponse>(`/searches/${encodeURIComponent(id)}/matches`),
 };

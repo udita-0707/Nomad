@@ -36,6 +36,13 @@
       "when": 1794569856592,
       "tag": "0004_full_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794574608842,
+      "tag": "0005_owner_memberships",
+      "breakpoints": true
     }
   ]
 }
