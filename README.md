@@ -65,10 +65,15 @@ Then open http://localhost:5173. http://localhost:5173/api/health should say the
 - **G2** Open a member's profile from a group to see their interests and groups. No gender or contact details are shown.
 - **M6** Members compare hotels for the group's city and dates, with the cost split per person, and book one. The booking is a mock: it's saved and every member sees it, but nothing is reserved.
 - **S1** Group chat on the group page, for members only, before and after booking.
+- **Booking.com hand-off** When no group matches your search, or nobody has joined your group yet, a "Book solo on Booking.com" button opens Booking.com search results in a new tab with your city, dates and 1 adult filled in. It's a plain link: nothing is sent to our API or saved.
 
 ## Known limitations
 
 - Chat checks for new messages every 4 seconds. There's no unread badge, and messages can't be edited or deleted.
 - Bookings can't be cancelled, and booking doesn't reduce the rooms left.
+
+## Future scope
+
+- A deeper Booking.com partner integration: live prices and availability in the app, and a real reservation in place of the mock booking.
 
 For how the code is laid out, see [docs/ENGINEERING.md](docs/ENGINEERING.md).

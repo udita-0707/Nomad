@@ -155,3 +155,11 @@ Entry format:
 - Why: smallest change that works for 2 to 4 people, no new library, and the server keeps every rule.
 - Trade-off / revisit if: up to 4s delay and no unread badge; revisit if more than about 50 messages arrive in 4 seconds, or the demo needs instant delivery.
 - Files: apps/api/src/db/schema.ts, apps/api/drizzle/0006_group_messages.sql, packages/shared/src/index.ts, apps/api/src/{controllers/chatController.ts,routes/groupPage.ts}, apps/web/src/{lib/api.ts,lib/useGroupChat.ts,components/GroupChat.tsx,pages/GroupPlan.tsx,styles.css}, docs/api-contract.md, DATA_DICTIONARY.md, README.md
+
+## D-019 | 2026-11-13 19:08 | Booking.com solo hand-off as a plain link
+- Context: a traveller with no matching group, or an owner nobody has joined yet, had no next step (group booking needs 2 members). The hackathon is hosted by Booking.com.
+- Decision: a "Book solo on Booking.com" link to booking.com/searchresults.html (ss, checkin, checkout, group_adults=1, no_rooms=1) built with URLSearchParams, opened in a new tab with rel="noopener noreferrer". Shown on the empty matches page and on the group page when membersCount is 1 (only the owner) and nothing is booked.
+- Rejected: a partner API integration (needs affiliate keys and time we don't have), saving the hand-off as a booking (it isn't one), a new backend endpoint (the page already has the city and dates).
+- Why: a useful exit for solo travellers with no API, no schema change and no stored data.
+- Trade-off / revisit if: we can't tell whether they booked, and Booking.com may change its URL parameters; revisit with a partner integration (listed as future scope in README).
+- Files: apps/web/src/{lib/bookingHandoff.ts,components/BookSoloLink.tsx,pages/Matches.tsx,pages/GroupPlan.tsx,styles.css}, README.md, docs/decisions.md

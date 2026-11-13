@@ -1,6 +1,7 @@
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { GENDER_COMPOSITIONS, type CatalogResponse, type GenderComposition, type Match, type MatchFilters, type Search } from '@nomad/shared';
+import { BookSoloLink } from '../components/BookSoloLink';
 import { Logo } from '../components/Logo';
 import { ApiError } from '../lib/api';
 import { useCatalog } from '../lib/useCatalog';
@@ -80,7 +81,7 @@ export function MatchesPage() {
             <SearchSummary search={data.search} count={data.matches.length} timeZone={timeZone} />
             {data.totalMatches > 0 && <MatchFiltersBar search={data.search} filters={filters} labels={labels} onChange={updateFilters} />}
             {data.totalMatches === 0 ? (
-              <EmptyState title="No groups match yet" text="Try widening your dates, adding a few more interests, or adjusting your budget." action="Edit search" />
+              <EmptyState title="No groups match yet" text="Try widening your dates, adding a few more interests, or adjusting your budget. Or book your own stay for these dates." action="Edit search" solo={data.search} />
             ) : data.matches.length === 0 ? (
               <FilteredEmpty onClear={() => updateFilters({ interests: [], gender: 'ANY' })} />
             ) : (
@@ -150,13 +151,16 @@ function MatchCard({ match, searchId, timeZone, labels, requestState, requestErr
   );
 }
 
-function EmptyState({ title, text, action }: { title: string; text: string; action: string }) {
+function EmptyState({ title, text, action, solo }: { title: string; text: string; action: string; solo?: Search }) {
   return (
     <div className="matches-empty">
       <span>✦</span>
       <h2>{title}</h2>
       <p>{text}</p>
-      <Link className="button button-small" to="/search">{action} <span>↗</span></Link>
+      <div className="empty-actions">
+        <Link className="button button-small" to="/search">{action} <span>↗</span></Link>
+        {solo && <BookSoloLink city={solo.city} checkIn={solo.checkIn} checkOut={solo.checkOut} className="button button-ghost button-small" />}
+      </div>
     </div>
   );
 }
