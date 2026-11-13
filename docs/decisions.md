@@ -67,3 +67,11 @@ Entry format:
 - Why: least rework, and allowed values match data/problem-3 so new users and seeded travellers match on the same terms.
 - Trade-off / revisit if: users still create a password M1 doesn't need; age is not collected yet, add it if G2 member pages are built.
 - Files: apps/api/src/db/schema.ts, apps/api/drizzle/0001_profiles.sql, apps/api/src/controllers/profileController.ts, apps/api/src/routes/profile.ts, apps/api/src/app.ts, packages/shared/src/index.ts, apps/web/src/pages/ProfileSetup.tsx, apps/web/src/pages/Dashboard.tsx, apps/web/src/App.tsx, apps/web/src/lib/api.ts, apps/web/src/lib/useProfile.ts, docs/api-contract.md
+
+## D-008 | 2026-11-13 14:17 | Rename profiles to travellers with their own id
+- Context: the 24 seeded travellers in data/problem-3 have no email or password, so they can't live in a table keyed by users.id.
+- Decision: replace profiles with travellers (text id, optional unique user_id, age column); seeds will keep ids like T-001, signed-up users get a generated id. Migration 0002 copies existing profiles across.
+- Rejected: fake user accounts for seeds (fake emails and passwords), a separate seed table (two places to match against).
+- Why: one table for everyone the matcher compares, with the data pack's ids intact.
+- Trade-off / revisit if: travellers.id is text, not uuid; the API path stays /api/profile, so the frontend is unchanged.
+- Files: apps/api/src/db/schema.ts, apps/api/drizzle/0002_travellers.sql, apps/api/drizzle/meta/0002_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/src/controllers/profileController.ts
