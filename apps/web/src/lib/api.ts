@@ -16,8 +16,10 @@ import type {
   GroupsResponse,
   JoinRequestResponse,
   JoinRequestsResponse,
+  TravellerProfileResponse,
   SearchRequest,
   SearchResponse,
+  MatchFilters,
   UpdateUsernameRequest,
   UserResponse,
 } from '@nomad/shared';
@@ -64,7 +66,14 @@ export const api = {
   getCatalog: () => request<CatalogResponse>('/catalog'),
   createSearch: (body: SearchRequest) =>
     request<SearchResponse>('/searches', { method: 'POST', body: JSON.stringify(body) }),
-  getSearchMatches: (id: string) => request<SearchResponse>(`/searches/${encodeURIComponent(id)}/matches`),
+  getSearchMatches: (id: string, filters: MatchFilters = { interests: [], gender: 'ANY' }) => {
+    const query = new URLSearchParams();
+    if (filters.interests.length) query.set('interests', filters.interests.join(','));
+    if (filters.gender !== 'ANY') query.set('gender', filters.gender);
+    const suffix = query.toString() ? `?${query}` : '';
+    return request<SearchResponse>(`/searches/${encodeURIComponent(id)}/matches${suffix}`);
+  },
+  getTravellerProfile: (id: string) => request<TravellerProfileResponse>(`/travellers/${encodeURIComponent(id)}`),
   requestToJoin: (groupId: string, searchId: string) => request<JoinRequestResponse>(`/groups/${encodeURIComponent(groupId)}/requests`, { method: 'POST', body: JSON.stringify({ searchId }) }),
   getGroupRequests: (groupId: string, status: 'pending' | 'all' = 'pending') => request<JoinRequestsResponse>(`/groups/${encodeURIComponent(groupId)}/requests?status=${status}`),
   decideGroupRequest: (groupId: string, travellerId: string, status: 'approved' | 'rejected') => request<JoinRequestResponse>(`/groups/${encodeURIComponent(groupId)}/requests/${encodeURIComponent(travellerId)}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
