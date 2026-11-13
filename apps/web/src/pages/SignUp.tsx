@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { loginRequestSchema, signupRequestSchema } from '@nomad/shared';
 import { api, ApiError } from '../lib/api';
 import { useMe } from '../lib/useMe';
@@ -10,6 +11,7 @@ export function SignUp() { return <AuthPage mode="signup" />; }
 
 export function AuthPage({ mode }: { mode: 'signup' | 'signin' }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: me } = useMe();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
@@ -33,7 +35,9 @@ export function AuthPage({ mode }: { mode: 'signup' | 'signin' }) {
     try {
       if (isSignup) await api.signup({ email: parsed.data.email, password: parsed.data.password, username: String((parsed.data as { username?: string }).username || '') || undefined });
       else await api.login({ email: parsed.data.email, password: parsed.data.password });
-      navigate('/dashboard');
+      const profileResponse = await api.profile();
+      queryClient.setQueryData(['profile'], profileResponse);
+      navigate(profileResponse.profile ? '/dashboard' : '/profile', { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.body.code === 'EMAIL_TAKEN') setError('You already have a Nomad account. Sign in instead.');
       else if (err instanceof ApiError && err.body.code === 'USERNAME_TAKEN') setError('That username is already taken. Try another one.');
