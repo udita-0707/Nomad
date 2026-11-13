@@ -6,6 +6,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ProfileSetup } from './pages/ProfileSetup';
 import { CreateGroup } from './pages/CreateGroup';
 import { SearchPage } from './pages/Search';
+import { MatchesPage } from './pages/Matches';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -43,6 +44,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <SearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/search/:id"
+        element={
+          <ProtectedRoute>
+            <MatchesPage />
           </ProtectedRoute>
         }
       />
