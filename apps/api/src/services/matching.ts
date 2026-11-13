@@ -4,10 +4,14 @@ import { db } from '../db/index.js';
 
 // The six M4 rules from docs/match-groups.sql, run in one query with bound parameters.
 // The seeker fields come from a stored search; gender is the profile gender.
-type Seeker = Pick<
+type SeekerFields = Pick<
   Search,
   'city' | 'checkIn' | 'checkOut' | 'budgetInr' | 'interests' | 'gender' | 'genderPreference'
 > & { travellerId: string };
+// During approval, the pending membership itself is ignored while the six
+// matching rules are re-evaluated. New requests still use the default false.
+type SeekerOptions = { ignoreExistingMembership?: boolean };
+type Seeker = SeekerFields & SeekerOptions;
 
 type MatchRow = {
   id: string;
@@ -24,9 +28,10 @@ type MatchRow = {
   budget_diff: number;
 };
 
-function matchQuery(s: Seeker, onlyGroupId?: string): SQL {
+function matchQuery(s: Seeker & SeekerOptions, onlyGroupId?: string): SQL {
   const interests = sql`${`{${s.interests.join(',')}}`}::text[]`;
   const groupFilter = onlyGroupId ? sql`AND g.id = ${onlyGroupId}` : sql``;
+  const membershipFilter = s.ignoreExistingMembership ? sql`` : sql`AND NOT EXISTS (SELECT 1 FROM group_memberships m WHERE m.group_id = g.id AND m.traveller_id = ${s.travellerId})`;
   return sql`
     WITH g AS (
       SELECT g.*, o.name AS owner_name,
@@ -39,8 +44,7 @@ function matchQuery(s: Seeker, onlyGroupId?: string): SQL {
       WHERE g.city = ${s.city}
         AND g.check_in < ${s.checkOut}::date AND g.check_out > ${s.checkIn}::date
         AND NOT EXISTS (SELECT 1 FROM bookings b WHERE b.group_id = g.id)
-        AND NOT EXISTS (SELECT 1 FROM group_memberships m
-                         WHERE m.group_id = g.id AND m.traveller_id = ${s.travellerId})
+        ${membershipFilter}
         ${groupFilter}
     )
     SELECT id, name, city, to_char(check_in, 'YYYY-MM-DD') AS check_in, to_char(check_out, 'YYYY-MM-DD') AS check_out,
