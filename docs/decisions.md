@@ -91,3 +91,11 @@ Entry format:
 - Why: the six matching rules, membership states and booking lock are enforced by the database, and seeded and new data share the same tables.
 - Trade-off / revisit if: the four small reference tables are filled by the migration so the travellers FK holds; no M2 to M6 endpoints yet.
 - Files: apps/api/src/db/schema.ts, apps/api/src/db/seed.ts, apps/api/drizzle/0004_full_schema.sql, apps/api/drizzle/meta/0004_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/package.json, package.json, README.md
+
+## D-011 | 2026-11-13 17:30 | API shape for M2 to M6
+- Context: Aman asked for every endpoint through M6 before building; the statement leaves who can book, how requests link to searches, and ranking open.
+- Decision: 25 endpoints as in the API spec doc; the owner is stored as an approved membership; join requests carry a searchId and the server re-checks all six rules; approvals lock the group row; ranking is shared interests, shared nights, budget gap, earliest check-in, id; any approved member books once 2+ members are in; hotel costs are always recomputed on the server.
+- Rejected: trusting the client's match list (judges can call the API directly), owner-only booking (FAQ says any member), cached prices (members count changes).
+- Why: correctness on judge requests matters most, so every rule is enforced where the state changes.
+- Trade-off / revisit if: more endpoints than a minimal demo needs; drop 19 and 23 if time runs short.
+- Files: docs/decisions.md
