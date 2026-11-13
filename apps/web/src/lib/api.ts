@@ -10,6 +10,8 @@ import type {
   GroupCreateRequest,
   GroupResponse,
   GroupsResponse,
+  JoinRequestResponse,
+  JoinRequestsResponse,
   SearchRequest,
   SearchResponse,
   UpdateUsernameRequest,
@@ -59,4 +61,8 @@ export const api = {
   createSearch: (body: SearchRequest) =>
     request<SearchResponse>('/searches', { method: 'POST', body: JSON.stringify(body) }),
   getSearchMatches: (id: string) => request<SearchResponse>(`/searches/${encodeURIComponent(id)}/matches`),
+  requestToJoin: (groupId: string, searchId: string) => request<JoinRequestResponse>(`/groups/${encodeURIComponent(groupId)}/requests`, { method: 'POST', body: JSON.stringify({ searchId }) }),
+  getGroupRequests: (groupId: string, status: 'pending' | 'all' = 'pending') => request<JoinRequestsResponse>(`/groups/${encodeURIComponent(groupId)}/requests?status=${status}`),
+  decideGroupRequest: (groupId: string, travellerId: string, status: 'approved' | 'rejected') => request<JoinRequestResponse>(`/groups/${encodeURIComponent(groupId)}/requests/${encodeURIComponent(travellerId)}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  cancelJoinRequest: (groupId: string) => request<void>(`/groups/${encodeURIComponent(groupId)}/requests/me`, { method: 'DELETE' }),
 };
