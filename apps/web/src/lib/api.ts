@@ -3,6 +3,8 @@ import type {
   DashboardResponse,
   ErrorResponse,
   HealthResponse,
+  BookingRequest,
+  BookingResponse,
   HotelOptionsResponse,
   HotelSearchFilters,
   LoginRequest,
@@ -72,4 +74,7 @@ export const api = {
     Object.entries(filters).forEach(([key, value]) => value !== undefined && query.set(key, String(value)));
     return request<HotelOptionsResponse>(`/groups/${encodeURIComponent(id)}/hotels?${query}`);
   },
+  getBooking: (id: string) => request<BookingResponse>(`/groups/${encodeURIComponent(id)}/booking`),
+  bookGroup: (id: string, body: BookingRequest) =>
+    request<BookingResponse>(`/groups/${encodeURIComponent(id)}/booking`, { method: 'POST', body: JSON.stringify(body) }),
 };

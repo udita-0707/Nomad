@@ -2,6 +2,9 @@ import { sql } from 'drizzle-orm';
 import type { HotelOption, HotelSearchQuery } from '@nomad/shared';
 import { db } from '../db/index.js';
 
+// db or a transaction, so booking can price inside its lock.
+type Executor = Pick<typeof db, 'execute'>;
+
 type Stay = { city: string; checkIn: string; checkOut: string };
 
 type OptionRow = {
@@ -38,10 +41,17 @@ function imageUrl(path: string | null) {
 // current members (DATA_DICTIONARY.md): rooms = ceil(members / max_adults); each night
 // check_in .. check_out-1 needs rooms_left >= rooms (a missing night counts as full);
 // total = price x rooms x nights; per member = round(total / members, 2). Never cached.
-export async function hotelOptions(stay: Stay, membersCount: number, filters: HotelSearchQuery): Promise<HotelOption[]> {
+export async function hotelOptions(
+  stay: Stay,
+  membersCount: number,
+  filters: HotelSearchQuery,
+  onlyRoomId?: string,
+  exec: Executor = db,
+): Promise<HotelOption[]> {
+  const roomFilter = onlyRoomId ? sql`AND r.room_id = ${onlyRoomId}` : sql``;
   const refundable = filters.refundable === 'true' ? sql`AND r.refundable` : sql``;
   const minStars = filters.minStars ? sql`AND h.stars >= ${filters.minStars}` : sql``;
-  const { rows } = await db.execute<OptionRow>(sql`
+  const { rows } = await exec.execute<OptionRow>(sql`
     WITH stay AS (
       SELECT ${stay.checkIn}::date AS check_in, ${stay.checkOut}::date AS check_out,
              (${stay.checkOut}::date - ${stay.checkIn}::date) AS nights, ${membersCount}::int AS members
@@ -54,7 +64,7 @@ export async function hotelOptions(stay: Stay, membersCount: number, filters: Ho
       FROM rooms r
       JOIN hotels h ON h.hotel_id = r.hotel_id
       CROSS JOIN stay s
-      WHERE h.city = ${stay.city} ${refundable} ${minStars}
+      WHERE h.city = ${stay.city} ${refundable} ${minStars} ${roomFilter}
     )
     SELECT p.hotel_id, p.hotel_name, p.stars, p.rating, p.image, p.family_friendly,
            p.room_id, p.room_name, p.room_type, p.max_adults, p.refundable, p.price, p.rooms_needed,
@@ -91,4 +101,11 @@ export async function hotelOptions(stay: Stay, membersCount: number, filters: Ho
     perMemberInr: Number(r.per_member),
     minRoomsLeft: r.min_rooms_left,
   }));
+}
+
+// One room type priced for the group right now, or null if it is not in the group's city
+// or not free for every night (used by booking; the client never sends a price).
+export async function priceRoom(stay: Stay, membersCount: number, roomId: string, exec: Executor = db) {
+  const [option] = await hotelOptions(stay, membersCount, { sort: 'perMember' }, roomId, exec);
+  return option ?? null;
 }

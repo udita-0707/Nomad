@@ -34,7 +34,7 @@ async function ownerTravellerId(userId: string): Promise<string> {
 type MineRow = {
   id: string; owner_id: string; name: string; city: Group['city']; check_in: string; check_out: string;
   max_size: number; budget_inr: number; itinerary: string; created_at: Date; owner_name: string;
-  nights: number; members_count: number; pending_count: number; booked: boolean;
+  nights: number; members_count: number; pending_count: number; booked: boolean; booked_hotel: string | null;
   my_status: 'pending' | 'approved' | 'rejected';
 };
 
@@ -43,7 +43,7 @@ function toSummary(r: MineRow, isOwner: boolean): GroupSummary {
     id: r.id, ownerId: r.owner_id, name: r.name, city: r.city, checkIn: r.check_in, checkOut: r.check_out,
     maxSize: r.max_size, budgetInr: r.budget_inr, itinerary: r.itinerary, createdAt: new Date(r.created_at).toISOString(),
     ownerName: r.owner_name, nights: r.nights, membersCount: r.members_count,
-    pendingCount: isOwner ? r.pending_count : 0, booked: r.booked,
+    pendingCount: isOwner ? r.pending_count : 0, booked: r.booked, bookedHotelName: r.booked_hotel,
   };
 }
 
@@ -58,6 +58,7 @@ export async function getMyGroups(req: Request, res: Response) {
            (SELECT count(*)::int FROM group_memberships a WHERE a.group_id = g.id AND a.status = 'approved') AS members_count,
            (SELECT count(*)::int FROM group_memberships p WHERE p.group_id = g.id AND p.status = 'pending') AS pending_count,
            EXISTS (SELECT 1 FROM bookings b WHERE b.group_id = g.id) AS booked,
+           (SELECT h.name FROM bookings b JOIN hotels h ON h.hotel_id = b.hotel_id WHERE b.group_id = g.id) AS booked_hotel,
            m.status AS my_status
     FROM group_memberships m
     JOIN groups g ON g.id = m.group_id

@@ -131,3 +131,11 @@ Entry format:
 - Why: it reuses the M5 endpoints and only fills in the endpoint 12 extension the contract had already planned.
 - Trade-off / revisit if: joinees can't see the other members' names yet; build endpoint 13 if that's needed.
 - Files: packages/shared/src/index.ts, apps/api/src/controllers/groupController.ts, apps/web/src/{App.tsx,lib/useRequests.ts,pages/Dashboard.tsx,pages/GroupMembers.tsx,styles.css}, docs/api-contract.md
+
+## D-016 | 2026-11-13 20:23 | CHANGE: M6 Confirm saves a mock booking every member sees
+- Context: with the popup-only Book (D-014), other members saw nothing after a refresh. The team wants the chosen hotel saved and visible to the whole group.
+- Decision: built endpoints 24 and 25 on the existing bookings table. Confirm calls POST /api/groups/:id/booking, which locks the group row, requires an approved member and at least 2 approved members (P4, now confirmed), recomputes the price on the server, and inserts one booking (BK- id, hotel, room, rooms, dates, nights, members, total, per-member share). A second booking or a race returns 409 ALREADY_BOOKED. The group page shows a Booked card instead of the options to every member, and dashboard cards for owners and joinees show "Booked · <hotel>" (bookedHotelName on GroupSummary). Existing triggers keep the booking immutable and block new requests and approvals.
+- Rejected: keeping it popup-only (nothing persisted), saving the choice in browser storage (only one person would see it), saved options and voting (still not asked for).
+- Why: the schema and triggers were already built for this, so a small amount of code makes the decision real for the whole group.
+- Trade-off / revisit if: it goes beyond the M6 criteria ("no actual booking creation"). It's a mock: rooms_left isn't reduced and there's no cancel; revisit if mentors want cancellation or real inventory.
+- Files: packages/shared/src/index.ts, apps/api/src/{controllers/bookingController.ts,controllers/hotelController.ts,controllers/groupController.ts,routes/groupPage.ts,services/pricing.ts}, apps/web/src/{lib/api.ts,lib/useGroupPage.ts,pages/GroupPlan.tsx,pages/Dashboard.tsx,pages/GroupMembers.tsx,styles.css}, docs/api-contract.md
