@@ -76,7 +76,7 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 9 | PUT /api/profile | yes | M1 | Built | – |
 | 10 | GET /api/catalog | no | M1 to M3 | Built | A |
 | 11 | POST /api/groups | traveller | M2 | Built | B |
-| 12 | GET /api/groups/mine | traveller | M2, M5 | Built (extend) | B |
+| 12 | GET /api/groups/mine | traveller | M2, M5 | Built | B |
 | 13 | GET /api/groups/:id | traveller | M2, M4, M6 | Planned | B |
 | 14 | POST /api/searches | traveller | M3, M4 | Built | A |
 | 15 | GET /api/searches/:id/matches | traveller | M4 | Built | A |
@@ -133,7 +133,7 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 
 `city`: one of `DESTINATION_CITIES` (Tokyo, Kyoto, Osaka, Dubai, Abu Dhabi). `maxSize` is the total number of people, owner included, from 2 to 4.
 
-### GroupSummary (planned): `Group` plus
+### GroupSummary (built): `Group` plus
 
 ```json
 { "ownerName": "Sarah", "nights": 5, "membersCount": 1, "pendingCount": 0, "booked": false }
@@ -226,18 +226,17 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 - **Errors:** 400 `VALIDATION_ERROR`, 401, 422 `PROFILE_REQUIRED`.
 - **Logic (P1):** in one transaction, insert the group and the owner's `group_memberships` row with `status 'approved'` and `decided_at now()`.
 
-### 12. GET /api/groups/mine (built, extend)
+### 12. GET /api/groups/mine (built)
 
-- **Response 200** `GroupsResponse`. Built today: `{ "groups": Group[] }`, the groups the caller owns, newest first.
-- **Planned additions:**
-  - Each item becomes a `GroupSummary`. That adds fields only, so existing code keeps working.
-  - Two new lists sit beside `groups`, each newest first:
+- **Response 200** `GroupsResponse` (D-015). `groups` are the groups the caller owns. Each item is a `GroupSummary` (fields were only added, so older code keeps working). Two more lists sit beside it. All three are newest first, and each item shows up in only one list:
 
   ```json
   { "groups": [GroupSummary], "joined": [GroupSummary], "requested": [GroupSummary & { "requestStatus": "pending" | "rejected" }] }
   ```
 
   - `joined` holds groups where the caller is an approved member but not the owner.
+  - `requested` holds the caller's pending and rejected requests (`RequestedGroup`).
+  - The dashboard shows "X of N joined" from `membersCount` / `maxSize`. The owner's members page lists everyone with their status using endpoint 17 with `?status=all`.
 - **Errors:** 401, 422 `PROFILE_REQUIRED`.
 
 ### 13. GET /api/groups/:id (planned, lane B)
