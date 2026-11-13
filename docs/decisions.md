@@ -91,3 +91,11 @@ Entry format:
 - Why: the six matching rules, membership states and booking lock are enforced by the database, and seeded and new data share the same tables.
 - Trade-off / revisit if: the four small reference tables are filled by the migration so the travellers FK holds; no M2 to M6 endpoints yet.
 - Files: apps/api/src/db/schema.ts, apps/api/src/db/seed.ts, apps/api/drizzle/0004_full_schema.sql, apps/api/drizzle/meta/0004_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/package.json, package.json, README.md
+
+## D-011 | 2026-11-13 18:16 | API contract for M1 to M6, split into three lanes
+- Context: the team wants to build M3 to M6 in parallel without clashing on paths, shapes or error codes; M2 create and list are already on main.
+- Decision: docs/api-contract.md fixes 25 endpoints (9 built, 2 built M2, 14 planned) with exact JSON, auth levels and error codes; 3 lanes own separate files (A search, B groups and requests, C group page); M2's shapes and 422 PROFILE_REQUIRED are kept, with additive fields only. Proposed, to confirm: owner stored as an approved member, join requests re-checked against all six rules, ranking by shared interests then nights then budget gap, any member books once 2+ are in.
+- Rejected: designing per feature as each lane starts (clashes in shared types and app.ts), changing the built M2 response (breaks the merged frontend).
+- Why: one written contract lets frontend and backend for each lane start at the same time.
+- Trade-off / revisit if: P1 needs createGroup to insert the owner's membership; revisit the four proposals if Aman rejects any.
+- Files: docs/api-contract.md, docs/decisions.md
