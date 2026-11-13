@@ -1,11 +1,10 @@
-// TODO: implement with bcrypt.
-// import bcrypt from 'bcrypt';
-// const ROUNDS = 10;
+import bcrypt from 'bcrypt';
+const ROUNDS = 10;
 
-export async function hashPassword(_plain: string): Promise<string> {
-  throw new Error('TODO: bcrypt.hash(plain, ROUNDS)');
+export async function hashPassword(plain: string): Promise<string> {
+  return bcrypt.hash(plain, ROUNDS);
 }
 
-export async function verifyPassword(_plain: string, _hash: string): Promise<boolean> {
-  throw new Error('TODO: bcrypt.compare(plain, hash)');
+export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
+  return bcrypt.compare(plain, hash);
 }
