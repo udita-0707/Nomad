@@ -9,6 +9,7 @@ import { SearchPage } from './pages/Search';
 import { MatchesPage } from './pages/Matches';
 import { GroupPlanPage } from './pages/GroupPlan';
 import { GroupMembersPage } from './pages/GroupMembers';
+import { TravellerProfilePage } from './pages/TravellerProfile';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -70,6 +71,14 @@ export function App() {
         element={
           <ProtectedRoute requireProfile>
             <GroupMembersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/travellers/:id"
+        element={
+          <ProtectedRoute requireProfile>
+            <TravellerProfilePage />
           </ProtectedRoute>
         }
       />

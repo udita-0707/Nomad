@@ -139,3 +139,11 @@ Entry format:
 - Why: the schema and triggers were already built for this, so a small amount of code makes the decision real for the whole group.
 - Trade-off / revisit if: it goes beyond the M6 criteria ("no actual booking creation"). It's a mock: rooms_left isn't reduced and there's no cancel; revisit if mentors want cancellation or real inventory.
 - Files: packages/shared/src/index.ts, apps/api/src/{controllers/bookingController.ts,controllers/hotelController.ts,controllers/groupController.ts,routes/groupPage.ts,services/pricing.ts}, apps/web/src/{lib/api.ts,lib/useGroupPage.ts,pages/GroupPlan.tsx,pages/Dashboard.tsx,pages/GroupMembers.tsx,styles.css}, docs/api-contract.md
+
+## D-017 | 2026-11-13 23:23 | G1 filters and G2 public member profiles
+- Context: good-to-have features need narrower match discovery and safe profile visibility without changing the frozen schema or M4 ranking.
+- Decision: apply URL-backed AND interest and gender-composition filters after ranked matching; expose only self or approved-member traveller profiles with approved groups and shared interests.
+- Rejected: widening matches from filters, filtering in the browser only, exposing contact/gender data, or revealing pending/declined profiles.
+- Why: backend remains the source of truth and the same 404 protects membership privacy.
+- Trade-off / revisit if: profiles do not expose gender or contact details; revisit only if the product explicitly adds a safe public field.
+- Files: packages/shared/src/index.ts, apps/api/src/{services/matching.ts,services/matchFilters.ts,controllers/searchController.ts,controllers/travellerController.ts,routes/searches.ts,routes/travellers.ts,app.ts}, apps/web/src/{pages/Matches.tsx,pages/TravellerProfile.tsx,pages/GroupMembers.tsx,lib/api.ts,lib/useSearch.ts,lib/useTravellerProfile.ts,App.tsx,styles.css}, docs/api-contract.md, README.md

@@ -77,7 +77,7 @@ function MemberRow({ row, isOwner, canApprove, busy, onDecide }: { row: JoinRequ
   return (
     <article className={`member-row member-${state}`}>
       <div>
-        <h3>{row.traveller.name}</h3>
+        <h3>{isOwner || row.status === 'approved' ? <Link to={`/travellers/${row.traveller.id}`}>{row.traveller.name}</Link> : row.traveller.name}</h3>
         <small>{row.traveller.homeCity}{row.traveller.age ? ` · ${row.traveller.age}` : ''}{shared && !isOwner ? ` · shares ${shared}` : ''}</small>
         {row.search && !isOwner && <small>Wants {row.search.checkIn} → {row.search.checkOut} · ₹{row.search.budgetInr.toLocaleString('en-IN')}</small>}
       </div>
