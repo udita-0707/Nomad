@@ -113,7 +113,7 @@ export async function decideGroupRequest(req: Request, res: Response) {
   const targetId = req.params.travellerId;
   const status = (req.body as { status: 'approved' | 'rejected' }).status;
   await groupForOwner(groupId, owner.id);
-  const result = await db.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     const locked = await tx.execute<{ id: string; max_size: number }>(sql`SELECT id, max_size FROM groups WHERE id = ${groupId} FOR UPDATE`);
     if (!locked.rows[0]) throw new AppError(404, 'NOT_FOUND', 'Group not found');
     const rows = await tx.select().from(groupMemberships).where(and(eq(groupMemberships.groupId, groupId), eq(groupMemberships.travellerId, targetId)));

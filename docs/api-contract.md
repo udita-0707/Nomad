@@ -47,11 +47,11 @@ Every error response has this shape (`ErrorResponse`):
 | EMAIL_TAKEN | 409 | Signup email already used | Built |
 | USERNAME_TAKEN | 409 | Username already used | Built |
 | USERNAME_UPDATE_LIMIT_REACHED | 409 | Second username change | Built |
-| ALREADY_REQUESTED | 409 | Caller already has a row for this group (owner, member, pending or rejected) | Planned |
-| NOT_A_MATCH | 409 | The group no longer passes the six rules for this search; `message` names the rule | Planned |
-| NOT_PENDING | 409 | Approving, rejecting or cancelling a request that is not pending | Planned |
-| GROUP_FULL | 409 | Approving would exceed `maxSize` | Planned |
-| GROUP_BOOKED | 409 | The group is booked: no new requests, approvals or saved options | Planned |
+| ALREADY_REQUESTED | 409 | Caller already has a row for this group (owner, member, pending or rejected) | Built |
+| NOT_A_MATCH | 409 | The group no longer passes the six rules for this search; `message` names the rule | Built |
+| NOT_PENDING | 409 | Approving, rejecting or cancelling a request that is not pending | Built |
+| GROUP_FULL | 409 | Approving would exceed `maxSize` | Built |
+| GROUP_BOOKED | 409 | The group is booked: no new requests, approvals or saved options | Built |
 | NOT_AVAILABLE | 409 | That room is not free on every night for the rooms needed | Built |
 | ALREADY_SAVED | 409 | This member already saved this room | Planned |
 | NOT_ENOUGH_MEMBERS | 409 | Booking with fewer than 2 approved members (P4) | Built |
@@ -80,6 +80,7 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 13 | GET /api/groups/:id | traveller | M2, M4, M6 | Planned | B |
 | 14 | POST /api/searches | traveller | M3, M4 | Built | A |
 | 15 | GET /api/searches/:id/matches | traveller | M4 | Built | A |
+| 26 | GET /api/travellers/:id | traveller | G2 | Built | G2 |
 | 16 | POST /api/groups/:id/requests | traveller | M5 | Planned | B |
 | 17 | GET /api/groups/:id/requests | owner | M5 | Planned | B |
 | 18 | PATCH /api/groups/:id/requests/:travellerId | owner | M5 | Planned | B |
@@ -141,13 +142,17 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 
 `pendingCount` is the number of pending requests. It is filled only when the caller is the owner; otherwise it is `0`.
 
-### MemberCard (planned)
+### MemberCard (built)
 
 ```json
 { "id": "T-002", "name": "Priya", "age": 27, "gender": "FEMALE", "homeCity": "Mumbai", "interests": ["TEMPLES", "STREET_FOOD", "ADVENTURE"] }
 ```
 
 `age` is `null` for signed-up users until the profile form sends it.
+
+### TravellerProfileResponse (built)
+
+The traveller profile endpoint returns only safe public profile data. It never exposes gender, gender preference, user id, username, email, or pending/rejected memberships.
 
 ## Endpoints
 
@@ -299,10 +304,21 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 
 ### 15. GET /api/searches/:id/matches (built, lane A)
 
+- **Query:** `interests=TEMPLES,STREET_FOOD&gender=ALL_FEMALE`. Interests use AND semantics and must come from the saved search. `gender` is `ANY`, `ALL_FEMALE`, `ALL_MALE`, or `MIXED`.
 - Response 200, same shape as endpoint 14. It runs the stored search again, so the results reflect groups that have filled or been booked since.
+- The response includes `totalMatches` before filters and `filters` with the normalized values actually applied. Each match includes approved member cards and `femaleCount` / `maleCount`.
+- Filters narrow the ranked result and never re-sort it. Invalid interests return 400; repeated `interests` parameters return 400.
 - **Errors:** 401, 404 if the search belongs to another traveller, 422.
 
-### 16. POST /api/groups/:id/requests (planned, lane B)
+### 26. GET /api/travellers/:id (built, G2)
+
+- Requires a signed-in traveller profile.
+- A traveller is visible to themselves or to anyone who shares an approved group membership with them. Unknown, pending-only, and rejected-only targets all return the same 404 `NOT_FOUND` response.
+- Response includes the traveller's name, age, home city, home airport, interests, shared interests, and approved groups only. Gender, gender preference, account identity, and contact details are never returned.
+- Approved groups are ordered by check-in date and group id. Each group includes the viewer's role, approved member count, capacity, and booked state.
+- **Errors:** 401, 404, 422.
+
+### 16. POST /api/groups/:id/requests (built, lane B)
 
 - **Body** (`joinRequestSchema`): `{ "searchId": "uuid" }`.
 - **Response 201** `JoinRequestResponse`: `{ "request": { "groupId": "G-01", "travellerId": "T-002", "status": "pending", "requestedAt": "..." } }`.
@@ -312,7 +328,7 @@ The server reads the 4 reference tables once and caches them in memory. The sear
   - 409 `ALREADY_REQUESTED`, 409 `GROUP_BOOKED`.
   - 409 `NOT_A_MATCH` (proposed – confirm, P2): the server runs the six rules again for this group with the search's values.
 
-### 17. GET /api/groups/:id/requests (planned, lane B)
+### 17. GET /api/groups/:id/requests (built, lane B)
 
 - **Query:** `status=pending` (default) or `status=all`.
 - **Response 200** `JoinRequestsResponse`, oldest first:
@@ -325,7 +341,7 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 
 - **Errors:** 401, 403 `FORBIDDEN` (not the owner), 404, 422.
 
-### 18. PATCH /api/groups/:id/requests/:travellerId (planned, lane B)
+### 18. PATCH /api/groups/:id/requests/:travellerId (built, lane B)
 
 - **Body** (`decideRequestSchema`): `{ "status": "approved" | "rejected" }`.
 - **Response 200**: `{ "request": { "groupId", "travellerId", "status", "requestedAt", "decidedAt" } }`.
@@ -338,7 +354,7 @@ The server reads the 4 reference tables once and caches them in memory. The sear
   - Set `approved` and `decidedAt`.
 - **Reject** is allowed even after booking. Decisions are final.
 
-### 19. DELETE /api/groups/:id/requests/me (planned, lane B)
+### 19. DELETE /api/groups/:id/requests/me (built, lane B)
 
 Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no request), 409 `NOT_PENDING`, 422.
 

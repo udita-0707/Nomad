@@ -10,6 +10,7 @@ import { groupsRouter } from './routes/groups.js';
 import { groupPageRouter } from './routes/groupPage.js';
 import { catalogRouter } from './routes/catalog.js';
 import { searchesRouter } from './routes/searches.js';
+import { travellersRouter } from './routes/travellers.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -25,6 +26,7 @@ app.use('/api/groups', groupsRouter);
 app.use('/api/groups/:id', groupPageRouter);
 app.use('/api/catalog', catalogRouter);
 app.use('/api/searches', searchesRouter);
+app.use('/api/travellers', travellersRouter);
 
 // Hotel photos and their credits (images/ATTRIBUTIONS.md), served from the repo's images folder.
 const imagesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../images');
