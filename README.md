@@ -249,6 +249,15 @@ npm run db:generate
 After changing `apps/api/src/db/schema.ts`, run `npm run db:generate` and then `npm run db:migrate`.
 
 ## Repository map
+- **M1** Sign up, sign in, and a traveller profile. Sessions are cookies stored in Postgres. You can change your username once.
+- **M2** Owners post a group: city, dates, size, budget and plan.
+- **M3, M4** Search for a trip and get matching groups ranked by shared interests, then shared nights, then budget.
+- **G1** Filter matches by interests and group make-up. Filters live in the URL.
+- **M5** Ask to join a group. The owner approves or declines, and both sides see the status.
+- **G2** Open a member's profile from a group to see their interests and groups. No gender or contact details are shown.
+- **M6** Members compare hotels for the group's city and dates, with the cost split per person, and book one. The booking is a mock: it's saved and every member sees it, but nothing is reserved.
+- **S1** Group chat on the group page, for members only, before and after booking.
+- **Booking.com hand-off** When no group matches your search, or nobody has joined your group yet, a "Book solo on Booking.com" button opens Booking.com search results in a new tab with your city, dates and 1 adult filled in. It's a plain link: nothing is sent to our API or saved.
 
 | Folder | Purpose |
 |---|---|
@@ -262,3 +271,8 @@ After changing `apps/api/src/db/schema.ts`, run `npm run db:generate` and then `
 ## The promise
 
 Nomad is built around a small idea with a large human payoff: the best trips are not only about where we go, but who is there when we arrive. By making compatibility explicit, consent persistent, and planning shared, Nomad helps a hello become a crew—and a trip become a story worth remembering.
+## Future scope
+
+- A deeper Booking.com partner integration: live prices and availability in the app, and a real reservation in place of the mock booking.
+
+For how the code is laid out, see [docs/ENGINEERING.md](docs/ENGINEERING.md).
