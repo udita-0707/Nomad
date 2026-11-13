@@ -92,10 +92,10 @@ Entry format:
 - Trade-off / revisit if: the four small reference tables are filled by the migration so the travellers FK holds; no M2 to M6 endpoints yet.
 - Files: apps/api/src/db/schema.ts, apps/api/src/db/seed.ts, apps/api/drizzle/0004_full_schema.sql, apps/api/drizzle/meta/0004_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/package.json, package.json, README.md
 
-## D-011 | 2026-11-13 18:16 | API contract for M1 to M6, split into three lanes
-- Context: the team wants to build M3 to M6 in parallel without clashing on paths, shapes or error codes; M2 create and list are already on main.
-- Decision: docs/api-contract.md fixes 25 endpoints (9 built, 2 built M2, 14 planned) with exact JSON, auth levels and error codes; 3 lanes own separate files (A search, B groups and requests, C group page); M2's shapes and 422 PROFILE_REQUIRED are kept, with additive fields only. Proposed, to confirm: owner stored as an approved member, join requests re-checked against all six rules, ranking by shared interests then nights then budget gap, any member books once 2+ are in.
-- Rejected: designing per feature as each lane starts (clashes in shared types and app.ts), changing the built M2 response (breaks the merged frontend).
-- Why: one written contract lets frontend and backend for each lane start at the same time.
-- Trade-off / revisit if: P1 needs createGroup to insert the owner's membership; revisit the four proposals if Aman rejects any.
-- Files: docs/api-contract.md, docs/decisions.md
+## D-011 | 2026-11-13 17:30 | API shape for M2 to M6
+- Context: Aman asked for every endpoint through M6 before building; the statement leaves who can book, how requests link to searches, and ranking open.
+- Decision: 25 endpoints as in the API spec doc; the owner is stored as an approved membership; join requests carry a searchId and the server re-checks all six rules; approvals lock the group row; ranking is shared interests, shared nights, budget gap, earliest check-in, id; any approved member books once 2+ members are in; hotel costs are always recomputed on the server.
+- Rejected: trusting the client's match list (judges can call the API directly), owner-only booking (FAQ says any member), cached prices (members count changes).
+- Why: correctness on judge requests matters most, so every rule is enforced where the state changes.
+- Trade-off / revisit if: more endpoints than a minimal demo needs; drop 19 and 23 if time runs short.
+- Files: docs/decisions.md
