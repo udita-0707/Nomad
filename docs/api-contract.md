@@ -42,7 +42,7 @@ Every error response has this shape (`ErrorResponse`):
 | VALIDATION_ERROR | 400 | Body or query fails Zod; `fields` names each bad field | Built |
 | INVALID_CREDENTIALS | 401 | Wrong email or password | Built |
 | UNAUTHENTICATED | 401 | No valid session | Built |
-| FORBIDDEN | 403 | Signed in, but not the owner or a member this endpoint needs | Planned |
+| FORBIDDEN | 403 | Signed in, but not the owner or a member this endpoint needs | Built |
 | NOT_FOUND | 404 | Unknown route, or unknown id (also used for another user's search) | Built |
 | EMAIL_TAKEN | 409 | Signup email already used | Built |
 | USERNAME_TAKEN | 409 | Username already used | Built |
@@ -84,12 +84,12 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 17 | GET /api/groups/:id/requests | owner | M5 | Planned | B |
 | 18 | PATCH /api/groups/:id/requests/:travellerId | owner | M5 | Planned | B |
 | 19 | DELETE /api/groups/:id/requests/me | traveller | M5 | Planned | B |
-| 20 | GET /api/groups/:id/hotels | member | M6 | Planned | C |
-| 21 | POST /api/groups/:id/saved-options | member | M6 | Planned | C |
-| 22 | GET /api/groups/:id/saved-options | member | M6 | Planned | C |
-| 23 | DELETE /api/groups/:id/saved-options/:optionId | member | M6 | Planned | C |
-| 24 | POST /api/groups/:id/booking | member | M6 | Planned | C |
-| 25 | GET /api/groups/:id/booking | member | M6 | Planned | C |
+| 20 | GET /api/groups/:id/hotels | member | M6 | Built | C |
+| 21 | POST /api/groups/:id/saved-options | member | M6 | Out of scope (D-014) | C |
+| 22 | GET /api/groups/:id/saved-options | member | M6 | Out of scope (D-014) | C |
+| 23 | DELETE /api/groups/:id/saved-options/:optionId | member | M6 | Out of scope (D-014) | C |
+| 24 | POST /api/groups/:id/booking | member | M6 | Out of scope (D-014) | C |
+| 25 | GET /api/groups/:id/booking | member | M6 | Out of scope (D-014) | C |
 
 ## Shared objects
 
@@ -343,16 +343,16 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 
 Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no request), 409 `NOT_PENDING`, 422.
 
-### 20. GET /api/groups/:id/hotels (planned, lane C)
+### 20. GET /api/groups/:id/hotels (built, lane C)
 
 - **Query** (`hotelSearchQuerySchema`, all optional): `sort=perMember|rating|stars` (default `perMember`), `refundable=true`, `minStars=1..5`.
 - **Response 200** `HotelOptionsResponse`:
 
   ```json
   {
-    "context": { "city": "Kyoto", "checkIn": "2027-04-10", "checkOut": "2027-04-15", "nights": 5, "membersCount": 2 },
+    "context": { "city": "Kyoto", "checkIn": "2027-04-10", "checkOut": "2027-04-15", "nights": 5, "membersCount": 2, "timezone": "Asia/Tokyo" },
     "options": [{
-      "hotel": { "id": "HTL-KYO-001", "name": "Gion Corner Hotel", "stars": 3, "rating": 8.4, "image": "url", "familyFriendly": false },
+      "hotel": { "id": "HTL-KYO-001", "name": "Gion Corner Hotel", "stars": 3, "rating": 8.4, "image": "/api/hotel-images/HOTEL-TWIN-1.jpg", "familyFriendly": false },
       "room": { "id": "RM-KYO-001-A", "name": "Twin Room", "type": "TWIN", "maxAdults": 2, "refundable": true, "pricePerNightInr": 4760 },
       "roomsNeeded": 1, "totalInr": 23800, "perMemberInr": 11900, "minRoomsLeft": 2
     }]
@@ -365,9 +365,14 @@ Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no req
   - `totalInr` = price per night × rooms × nights.
   - `perMemberInr` = total / members, rounded to 2 decimals.
   - Prices are computed on every call and never cached.
-- **Errors:** 401, 403, 404, 422.
+- `context.timezone` is the destination's IANA zone, for showing dates. `hotel.image` is a URL served by the API (`/api/hotel-images/<file>`, credits at `/api/photo-credits`), or `null`.
+- Sort ties: `perMember` breaks ties by rating desc, then hotel id, then room id; `rating` and `stars` break ties by per-member cost asc.
+- Only approved members (owner included) may call it; a pending or rejected requester gets 403.
+- **Errors:** 400 (bad query), 401, 403, 404, 422.
 
-### 21. POST /api/groups/:id/saved-options (planned, lane C)
+**M6 scope note (D-014).** The M6 acceptance criteria say "No actual booking creation is needed". The Book button opens a confirm popup in the frontend and nothing is saved. Endpoints 21 to 25 below stay as the agreed shape in case booking is added later, but they are not built, and the `saved_options` and `bookings` tables stay unused.
+
+### 21. POST /api/groups/:id/saved-options (out of scope for M6, not built, lane C)
 
 - **Body** (`saveOptionSchema`): `{ "roomId": "RM-KYO-001-A" }`.
 - **Response 201** `SavedOptionResponse`: `{ "option": SavedOption }`.
@@ -380,7 +385,7 @@ Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no req
 
 - **Errors:** 400, 401, 403, 404 (room not in this city), 409 `NOT_AVAILABLE`, 409 `ALREADY_SAVED`, 409 `GROUP_BOOKED`, 422.
 
-### 22. GET /api/groups/:id/saved-options (planned, lane C)
+### 22. GET /api/groups/:id/saved-options (out of scope for M6, not built, lane C)
 
 - **Response 200** `SavedOptionsResponse`. Options are grouped by room, most votes first:
 
@@ -391,11 +396,11 @@ Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no req
 - `totalInr` and `perMemberInr` are recomputed for the current member count. `stale` is `true` when the member count has changed since an option was saved.
 - **Errors:** 401, 403, 404, 422.
 
-### 23. DELETE /api/groups/:id/saved-options/:optionId (planned, lane C)
+### 23. DELETE /api/groups/:id/saved-options/:optionId (out of scope for M6, not built, lane C)
 
 Response 204. Only the member who saved the option can delete it. Errors: 401, 403, 404, 409 `GROUP_BOOKED`, 422.
 
-### 24. POST /api/groups/:id/booking (planned, lane C)
+### 24. POST /api/groups/:id/booking (out of scope for M6, not built, lane C)
 
 - **Body** (`bookingRequestSchema`): `{ "roomId": "RM-KYO-001-A", "savedOptionId": "uuid, optional" }`. The frontend shows the confirm popup first; this call is the confirmation.
 - **Response 201** `BookingResponse`:
@@ -412,7 +417,7 @@ Response 204. Only the member who saved the option can delete it. Errors: 401, 4
   - `UNIQUE(group_id)` allows one booking per group. Triggers make the booking immutable and close the group to new requests and approvals (D-009).
   - `rooms_left` is not changed, because the catalog is read-only.
 
-### 25. GET /api/groups/:id/booking (planned, lane C)
+### 25. GET /api/groups/:id/booking (out of scope for M6, not built, lane C)
 
 Response 200 `{ "booking": Booking | null }`. Errors: 401, 403, 404, 422.
 
