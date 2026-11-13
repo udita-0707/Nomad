@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { HOTEL_SORTS, type Booking, type HotelOption, type HotelOptionsResponse, type HotelSearchFilters } from '@nomad/shared';
+import { BookSoloLink } from '../components/BookSoloLink';
 import { GroupChat } from '../components/GroupChat';
 import { Logo } from '../components/Logo';
 import { ApiError } from '../lib/api';
@@ -57,6 +58,7 @@ export function GroupPlanPage() {
               <BookedCard booking={booking} timeZone={data.context.timezone} />
             ) : (
               <>
+                {data.context.membersCount === 1 && <SoloHandoff context={data.context} />}
                 <div className="plan-filters" aria-label="Filter hotels">
                   <label>Sort by <select value={sort} onChange={(event) => setSort(event.target.value as Sort)}>{HOTEL_SORTS.map((s) => <option key={s} value={s}>{SORT_LABELS[s]}</option>)}</select></label>
                   <label>Stars <select value={minStars} onChange={(event) => setMinStars(Number(event.target.value))}><option value={0}>Any</option>{[3, 4, 5].map((n) => <option key={n} value={n}>{n}★ and up</option>)}</select></label>
@@ -176,6 +178,18 @@ function BookedCard({ booking, timeZone }: { booking: Booking; timeZone?: string
         <p className="confirm-note">This is a mock booking for the demo: nothing is reserved with the hotel. The group is now closed to new members.</p>
       </div>
     </article>
+  );
+}
+
+// Only members can open this page and the owner is always a member, so a count of 1
+// means the viewer is the owner with nobody approved yet. Group booking needs 2 members.
+function SoloHandoff({ context }: { context: HotelOptionsResponse['context'] }) {
+  return (
+    <div className="solo-handoff">
+      <span>✦</span>
+      <p><strong>No one has joined yet.</strong> Group booking opens once a second member is approved. Travelling on your own? Book directly for these dates.</p>
+      <BookSoloLink city={context.city} checkIn={context.checkIn} checkOut={context.checkOut} className="button button-ghost button-small" />
+    </div>
   );
 }
 
