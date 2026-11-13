@@ -6,6 +6,9 @@ import type {
   ProfileInput,
   ProfileResponse,
   SignupRequest,
+  GroupCreateRequest,
+  GroupResponse,
+  GroupsResponse,
   UpdateUsernameRequest,
   UserResponse,
 } from '@nomad/shared';
@@ -46,4 +49,7 @@ export const api = {
   profile: () => request<ProfileResponse>('/profile'),
   saveProfile: (body: ProfileInput) =>
     request<ProfileResponse>('/profile', { method: 'PUT', body: JSON.stringify(body) }),
+  myGroups: () => request<GroupsResponse>('/groups/mine'),
+  createGroup: (body: GroupCreateRequest) =>
+    request<GroupResponse>('/groups', { method: 'POST', body: JSON.stringify(body) }),
 };

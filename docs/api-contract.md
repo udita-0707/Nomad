@@ -25,6 +25,7 @@ Every error response:
 | NOT_FOUND           | 404    | Unknown route                                             |
 | EMAIL_TAKEN         | 409    | Signup with an email that already exists                  |
 | USERNAME_TAKEN      | 409    | Signup with a username that already exists                |
+| PROFILE_REQUIRED    | 422    | Authenticated user must complete a traveller profile first |
 | INTERNAL            | 500    | Anything else                                             |
 
 ## User object
@@ -50,6 +51,12 @@ Every error response:
 | GET    | /api/auth/me     | yes    | –                                               | 200 `{ "user" }`                                               |
 | PATCH  | /api/auth/profile/username | yes | `{ "username" }` | 200 `{ "user" }`; one edit allowed per account |
 | GET    | /api/dashboard   | yes    | –                                               | 200 `{ "user", "options": ["group_creator", "group_seeker"] }` |
+| GET    | /api/groups/mine | yes    | –                                               | 200 `{ "groups": [] }`; the signed-in traveller's group posts |
+| POST   | /api/groups      | yes    | `{ "name", "city", "checkIn", "checkOut", "maxSize", "budgetInr", "itinerary" }` | 201 `{ "group" }`; owner comes from the authenticated traveller |
+
+## M2 group owner
+
+`city` must be one of `Tokyo`, `Kyoto`, `Osaka`, `Dubai`, or `Abu Dhabi`. Both dates must be between `2027-04-01` and `2027-04-20`, with check-out after check-in. `maxSize` is the total group size from 1 through 4, and `budgetInr` is a positive whole-number approximate budget per person. The API rejects group creation until the authenticated user has a linked row in `travellers`.
 
 ## Usernames
 

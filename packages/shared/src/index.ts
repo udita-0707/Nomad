@@ -73,6 +73,41 @@ export type ProfileInput = z.input<typeof profileRequestSchema>;
 export type Profile = ProfileRequest & { updatedAt: string };
 export type ProfileResponse = { profile: Profile | null };
 
+// ---------- Group owner / M2 ----------
+
+export const DESTINATION_CITIES = ['Tokyo', 'Kyoto', 'Osaka', 'Dubai', 'Abu Dhabi'] as const;
+export const GROUP_DATE_MIN = '2027-04-01';
+export const GROUP_DATE_MAX = '2027-04-20';
+
+const groupDateSchema = z
+  .string()
+  .regex(/^2027-04-(0[1-9]|1[0-9]|20)$/, 'Choose a date from 1 to 20 April 2027');
+
+export const groupCreateRequestSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Group name is required').max(80, 'Group name must be 80 characters or fewer'),
+    city: z.enum(DESTINATION_CITIES),
+    checkIn: groupDateSchema,
+    checkOut: groupDateSchema,
+    maxSize: z.number().int().min(1).max(4),
+    budgetInr: z.number().int().positive().max(10_000_000),
+    itinerary: z.string().trim().max(2000, 'Itinerary must be 2,000 characters or fewer').default(''),
+  })
+  .superRefine((value, ctx) => {
+    if (value.checkOut <= value.checkIn) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['checkOut'], message: 'Check-out must be after check-in' });
+    }
+  });
+export type GroupCreateRequest = z.infer<typeof groupCreateRequestSchema>;
+
+export type Group = GroupCreateRequest & {
+  id: string;
+  ownerId: string;
+  createdAt: string;
+};
+export type GroupResponse = { group: Group };
+export type GroupsResponse = { groups: Group[] };
+
 // ---------- Responses ----------
 
 export const publicUserSchema = z.object({
@@ -103,6 +138,7 @@ export type ErrorCode =
   | 'USERNAME_UPDATE_LIMIT_REACHED'
   | 'INVALID_CREDENTIALS'
   | 'UNAUTHENTICATED'
+  | 'PROFILE_REQUIRED'
   | 'NOT_FOUND'
   | 'INTERNAL';
 

@@ -4,6 +4,7 @@ import { healthRouter } from './routes/health.js';
 import { authRouter } from './routes/auth.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import { profileRouter } from './routes/profile.js';
+import { groupsRouter } from './routes/groups.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 export const app = express();
@@ -15,6 +16,7 @@ app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/groups', groupsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
