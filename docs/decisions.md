@@ -4,15 +4,13 @@ Append-only: add new entries at the end and never rewrite old ones.
 
 Entry format:
 
-```
-## D-NNN | YYYY-MM-DD HH:MM | Short title
-- Context: what problem or gap this answers
-- Decision: what we chose
-- Rejected: alternative (why not), alternative (why not)
-- Why: the main reason
-- Trade-off / revisit if: what we give up, and when to change it
-- Files: paths touched
-```
+    ## D-NNN | YYYY-MM-DD HH:MM | Short title
+    - Context: what problem or gap this answers
+    - Decision: what we chose
+    - Rejected: alternative (why not), alternative (why not)
+    - Why: the main reason
+    - Trade-off / revisit if: what we give up, and when to change it
+    - Files: paths touched
 
 ## D-001 | 2026-11-13 13:34 | PostgreSQL via Docker for persistence
 - Context: user, session and group data must survive server restarts.
@@ -22,7 +20,15 @@ Entry format:
 - Trade-off / revisit if: needs Docker installed; switch to a hosted Postgres (Neon) for deployment.
 - Files: docker-compose.yml, .env.example
 
-## D-002 | 2026-11-13 13:34 | Cookie sessions stored in the database, not JWT
+## D-002 | 2026-11-13 13:34 | Drizzle ORM for database access
+- Context: the API needs typed queries and repeatable schema changes for every teammate.
+- Decision: Drizzle ORM with drizzle-kit migrations, replacing the earlier plan of raw SQL with pg.
+- Rejected: raw SQL with pg (no types, migrations by hand), Prisma (heavier, own schema language).
+- Why: typed queries close to plain SQL, plus generated migrations.
+- Trade-off / revisit if: one more tool to learn; revisit if a query needs SQL Drizzle can't express (use its sql helper).
+- Files: apps/api/src/db/schema.ts, apps/api/src/db/index.ts, apps/api/drizzle.config.ts, apps/api/drizzle/
+
+## D-003 | 2026-11-13 13:34 | Cookie sessions stored in the database, not JWT
 - Context: we need login that survives page refreshes and a logout that really works.
 - Decision: random 32-byte session id in an httpOnly cookie, with the session row in the sessions table, expiring after 7 days.
 - Rejected: JWT (can't be revoked before it expires), localStorage tokens (readable by scripts, so open to XSS theft).
@@ -30,7 +36,7 @@ Entry format:
 - Trade-off / revisit if: one database lookup per protected request; revisit if traffic makes that slow.
 - Files: apps/api/src/services/session.ts, apps/api/src/middleware/requireAuth.ts
 
-## D-003 | 2026-11-13 13:34 | Backend owns matching, ranking and cost logic
+## D-004 | 2026-11-13 13:34 | Backend owns matching, ranking and cost logic
 - Context: matching travellers to groups, ranking results and costing trips must give the same answer everywhere.
 - Decision: all matching, ranking and cost calculations live in the API; the frontend only displays results.
 - Rejected: computing in the browser (logic duplicated, easy to tamper with).
@@ -38,7 +44,7 @@ Entry format:
 - Trade-off / revisit if: more API calls for small UI changes; revisit only for purely visual sorting.
 - Files: apps/api/src
 
-## D-004 | 2026-11-13 13:34 | Catalog data is read-only, loaded by a separate loader
+## D-005 | 2026-11-13 13:34 | Catalog data is read-only, loaded by a separate loader
 - Context: destinations, hotels, rooms and availability come as fixed JSON files in data/catalog.
 - Decision: a separate loader imports the catalog; the app only reads it and never writes to it.
 - Rejected: editing catalog data through the API (not needed, and risks corrupting the provided dataset).
@@ -46,10 +52,18 @@ Entry format:
 - Trade-off / revisit if: catalog changes need a reload; revisit if the problem adds catalog editing.
 - Files: data/catalog
 
-## D-005 | 2026-11-13 13:34 | No AI or LLM calls inside the app
+## D-006 | 2026-11-13 13:34 | No AI or LLM calls inside the app
 - Context: the event rules forbid AI or LLM calls in the product.
 - Decision: all matching and ranking use plain, deterministic code.
 - Rejected: LLM-based matching or recommendations (against the rules).
 - Why: required by the event.
 - Trade-off / revisit if: no fuzzy natural-language features; revisit only if the rules change.
 - Files: none
+
+## D-007 | 2026-11-13 13:47 | CHANGE: keep email login and add a profile for M1
+- Context: M1 asks for a profile (name, gender, origin city, interests) that survives a refresh; email and password are not required.
+- Decision: keep email and password auth, add a profiles table (one per user) with GET and PUT /api/profile and a setup page shown before the dashboard; also store gender preference (default ANY) because the matching rules need it.
+- Rejected: name-only signup (rewrites working auth for little gain), free-text city and interests (would not match the seeded travellers).
+- Why: least rework, and allowed values match data/problem-3 so new users and seeded travellers match on the same terms.
+- Trade-off / revisit if: users still create a password M1 doesn't need; age is not collected yet, add it if G2 member pages are built.
+- Files: apps/api/src/db/schema.ts, apps/api/drizzle/0001_profiles.sql, apps/api/src/controllers/profileController.ts, apps/api/src/routes/profile.ts, apps/api/src/app.ts, packages/shared/src/index.ts, apps/web/src/pages/ProfileSetup.tsx, apps/web/src/pages/Dashboard.tsx, apps/web/src/App.tsx, apps/web/src/lib/api.ts, apps/web/src/lib/useProfile.ts, docs/api-contract.md
