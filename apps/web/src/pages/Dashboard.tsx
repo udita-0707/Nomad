@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { updateUsernameRequestSchema } from '@nomad/shared';
 import type { DashboardOption, PublicUser } from '@nomad/shared';
+import { api, ApiError } from '../lib/api';
 import { useDashboard } from '../lib/useMe';
 import { Logo } from '../components/Logo';
 
@@ -16,11 +17,11 @@ export function Dashboard() {
   async function signOut() {
     await api.logout().catch(() => undefined);
     await queryClient.invalidateQueries({ queryKey: ['me'] });
+    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     navigate('/');
   }
 
   const initials = user?.username.slice(0, 1).toUpperCase() ?? 'N';
-
   return <main className="dashboard-page"><aside className="dashboard-sidebar"><div><Logo dark className="dashboard-logo" /><div className="sidebar-label">YOUR SPACE</div><nav className="dashboard-nav"><button className={activeTab === 'overview' ? 'nav-item active' : 'nav-item'} onClick={() => setActiveTab('overview')}><span>◈</span> Overview</button><button className={activeTab === 'profile' ? 'nav-item active' : 'nav-item'} onClick={() => setActiveTab('profile')}><span>◉</span> Profile</button></nav></div><div className="sidebar-bottom"><div className="sidebar-trip"><span className="sidebar-trip-icon">✦</span><p>Ready to find<br /><em>your people?</em></p><button onClick={() => setActiveTab('overview')}>Start exploring ↗</button></div><button className="sign-out" onClick={signOut}>↪ <span>Sign out</span></button></div></aside><section className="dashboard-main"><header className="dashboard-topbar"><div><p className="eyebrow">{activeTab === 'profile' ? 'Your Nomad identity' : 'Your travel space'}</p><h1>{activeTab === 'profile' ? 'Profile' : 'Welcome back'}<span className="topbar-period"> / {isLoading ? '...' : user?.username}</span></h1></div><button className="dashboard-avatar" onClick={() => setActiveTab('profile')} aria-label="Open profile">{initials}</button></header>{activeTab === 'profile' ? <ProfileTab user={user} /> : <OverviewTab user={user} options={data?.options ?? []} onProfile={() => setActiveTab('profile')} />}</section></main>;
 }
 
@@ -31,9 +32,30 @@ function OverviewTab({ user, options, onProfile }: { user?: PublicUser; options:
 }
 
 function ProfileTab({ user }: { user?: PublicUser }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(user?.username ?? '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const canEdit = (user?.usernameEditCount ?? 1) < 1;
   const memberSince = user?.createdAt ? new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(new Date(user.createdAt)) : '—';
   const initials = user?.username.slice(0, 1).toUpperCase() ?? 'N';
-  return <div className="dashboard-content profile-content"><section className="profile-hero"><div className="profile-avatar">{initials}</div><div><span className="profile-status"><i /> Active account</span><h2>{user?.username ?? 'Nomad traveller'}</h2><p>Your Nomad identity, all in one place.</p></div><div className="profile-hero-mark">✦</div></section><div className="dashboard-section-heading profile-heading"><div><p className="eyebrow">Account details</p><h2>The details that keep you connected.</h2></div><span className="details-source">Synced from your account</span></div><section className="details-card"><DetailRow label="Username" value={user?.username ?? '—'} icon="@" /><DetailRow label="Email address" value={user?.email ?? '—'} icon="✉" /><DetailRow label="Member since" value={memberSince} icon="◷" /><DetailRow label="Account ID" value={user?.id ? `${user.id.slice(0, 8)}…` : '—'} icon="#" last /></section><section className="profile-note"><span>✦</span><div><strong>Your travel profile is next.</strong><p>Once your interests, home city, and travel preferences are connected, this is where your matching identity will come together.</p></div><button type="button" disabled>Coming next</button></section></div>;
+
+  async function saveUsername() {
+    const parsed = updateUsernameRequestSchema.safeParse({ username: draft });
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Choose a valid username.'); return; }
+    setSaving(true); setError('');
+    try {
+      await api.updateUsername(parsed.data);
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      setEditing(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.body.message : 'Could not update your username.');
+    } finally { setSaving(false); }
+  }
+
+  return <div className="dashboard-content profile-content"><section className="profile-hero"><div className="profile-avatar">{initials}</div><div><span className="profile-status"><i /> Active account</span><h2>{user?.username ?? 'Nomad traveller'}</h2><p>Your Nomad identity, all in one place.</p></div><div className="profile-hero-mark">✦</div></section><div className="dashboard-section-heading profile-heading"><div><p className="eyebrow">Account details</p><h2>The details that keep you connected.</h2></div><span className="details-source">Synced from your account</span></div><section className="details-card"><div className="detail-row username-detail"><span className="detail-icon">@</span><span className="detail-label">Username</span>{editing ? <div className="username-editor"><input value={draft} onChange={e => setDraft(e.target.value)} autoFocus aria-label="New username" /><div><button className="button button-small" type="button" onClick={saveUsername} disabled={saving}>{saving ? 'Saving…' : 'Save'}</button><button className="cancel-edit" type="button" onClick={() => { setEditing(false); setError(''); setDraft(user?.username ?? ''); }}>Cancel</button></div></div> : <strong>{user?.username ?? '—'}</strong>} {!editing && canEdit ? <button className="edit-username" type="button" onClick={() => { setDraft(user?.username ?? ''); setEditing(true); }}>Edit once</button> : !editing && <span className="username-locked">Locked</span>}<span className="detail-check">✓</span></div>{error && <p className="username-error" role="alert">{error}</p>}<DetailRow label="Email address" value={user?.email ?? '—'} icon="✉" /><DetailRow label="Member since" value={memberSince} icon="◷" /><DetailRow label="Account ID" value={user?.id ? `${user.id.slice(0, 8)}…` : '—'} icon="#" last /></section><section className="profile-note"><span>✦</span><div><strong>{canEdit ? 'You can edit your username once.' : 'Your username is locked.'}</strong><p>{canEdit ? 'Make it personal now, or keep the automatically created name.' : 'Your one username edit has already been used.'}</p></div><button type="button" disabled>{canEdit ? '1 edit left' : 'Saved'}</button></section></div>;
 }
 
 function DetailRow({ label, value, icon, last = false }: { label: string; value: string; icon: string; last?: boolean }) {

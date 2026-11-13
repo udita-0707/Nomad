@@ -26,12 +26,23 @@ export const loginRequestSchema = z.object({
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
+export const updateUsernameRequestSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(24, 'Username must be 24 characters or fewer')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Use only letters, numbers, hyphens, or underscores'),
+});
+export type UpdateUsernameRequest = z.infer<typeof updateUsernameRequestSchema>;
+
 // ---------- Responses ----------
 
 export const publicUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   username: z.string(),
+  usernameEditCount: z.number().int().min(0).max(1),
   createdAt: z.string(),
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
@@ -52,6 +63,7 @@ export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'EMAIL_TAKEN'
   | 'USERNAME_TAKEN'
+  | 'USERNAME_UPDATE_LIMIT_REACHED'
   | 'INVALID_CREDENTIALS'
   | 'UNAUTHENTICATED'
   | 'NOT_FOUND'

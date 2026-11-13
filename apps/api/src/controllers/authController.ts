@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { eq } from 'drizzle-orm';
-import type { LoginRequest, PublicUser, SignupRequest, UserResponse } from '@nomad/shared';
+import { eq, sql } from 'drizzle-orm';
+import type { LoginRequest, PublicUser, SignupRequest, UpdateUsernameRequest, UserResponse } from '@nomad/shared';
 import { db } from '../db/index.js';
 import { users, type User } from '../db/schema.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -21,6 +21,7 @@ export function toPublicUser(user: User): PublicUser {
     id: user.id,
     email: user.email,
     username: user.username,
+    usernameEditCount: user.usernameEditCount,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -103,4 +104,20 @@ export async function logout(req: Request, res: Response) {
 export async function me(req: Request, res: Response) {
   const body: UserResponse = { user: toPublicUser(req.user!) };
   res.json(body);
+}
+
+// PATCH /api/profile/username (requireAuth) — exactly one edit per account.
+export async function updateUsername(req: Request, res: Response) {
+  const { username } = req.body as UpdateUsernameRequest;
+  const current = req.user!;
+  if (current.usernameEditCount >= 1) {
+    throw new AppError(409, 'USERNAME_UPDATE_LIMIT_REACHED', 'Your username has already been updated once');
+  }
+  try {
+    const [user] = await db.update(users).set({ username, usernameEditCount: sql`${users.usernameEditCount} + 1` }).where(eq(users.id, current.id)).returning();
+    res.json({ user: toPublicUser(user) });
+  } catch (err) {
+    if (isUniqueViolation(err, 'users_username_unique')) throw new AppError(409, 'USERNAME_TAKEN', 'That username is already taken');
+    throw err;
+  }
 }
