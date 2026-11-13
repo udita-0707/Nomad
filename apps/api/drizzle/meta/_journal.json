@@ -29,6 +29,13 @@
       "when": 1794564818303,
       "tag": "0003_travellers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794570198996,
+      "tag": "0004_brave_imperial_guard",
+      "breakpoints": true
     }
   ]
 }
