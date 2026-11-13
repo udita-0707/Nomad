@@ -75,3 +75,19 @@ Entry format:
 - Why: one table for everyone the matcher compares, with the data pack's ids intact.
 - Trade-off / revisit if: travellers.id is text, not uuid; the API path stays /api/profile, so the frontend is unchanged.
 - Files: apps/api/src/db/schema.ts, apps/api/drizzle/0002_travellers.sql, apps/api/drizzle/meta/0002_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/src/controllers/profileController.ts
+
+## D-009 | 2026-11-13 16:56 | Matching and membership rules for the full schema
+- Context: three gaps in the problem statement: who the gender rule checks, whether a group of 1 is allowed, and whether a booked group takes members.
+- Decision: gender preference is checked both ways against every approved member, not just the owner; max_size is 2 to 4; a booked group is closed (a trigger refuses new requests and approvals, pending ones may be rejected).
+- Rejected: owner-only gender check (lets a same-gender seeker into a mixed group), size 1 (can never take anyone), approvals after booking (per-member split goes stale).
+- Why: Aman's call, safest reading for travellers and keeps the cost split correct.
+- Trade-off / revisit if: stricter than the written rule, so fewer matches; revisit if the organizers say owner-only.
+- Files: docs/decisions.md (design; built in D-010)
+
+## D-010 | 2026-11-13 17:10 | Build the full M1 to M6 schema in Drizzle
+- Context: the code had only users, sessions and travellers, without the agreed constraints; the M2 to M6 tables and the catalog did not exist.
+- Decision: migration 0004 adds the 7 catalog tables and groups, searches, group_memberships, saved_options, bookings with the agreed checks, indexes and triggers; travellers gets home_airport, a DB default id, smallint age, CHECKs and FKs to departure_cities; `npm run db:seed` loads hotels, rooms, availability and the seeded travellers and groups. Kept users.username_edit_count (teammate's one-time username edit).
+- Rejected: catalog read straight from JSON (no FKs, matching can't be one SQL query), loading every catalog table inside the migration (2,500 availability rows in a migration file).
+- Why: the six matching rules, membership states and booking lock are enforced by the database, and seeded and new data share the same tables.
+- Trade-off / revisit if: the four small reference tables are filled by the migration so the travellers FK holds; no M2 to M6 endpoints yet.
+- Files: apps/api/src/db/schema.ts, apps/api/src/db/seed.ts, apps/api/drizzle/0004_full_schema.sql, apps/api/drizzle/meta/0004_snapshot.json, apps/api/drizzle/meta/_journal.json, apps/api/package.json, package.json, README.md

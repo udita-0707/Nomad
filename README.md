@@ -46,7 +46,8 @@ Needs Node 20.12+ and Docker (for Postgres).
 cp .env.example .env
 npm install
 docker compose up -d        # Postgres 16 on localhost:5432
-npm run db:migrate          # create users and sessions tables
+npm run db:migrate          # create all tables (M1 to M6)
+npm run db:seed             # load the catalog and the 24 travellers and 12 groups
 npm run dev                 # API on :4000, web on :5173
 ```
 
