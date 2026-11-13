@@ -43,6 +43,13 @@
       "when": 1794574608842,
       "tag": "0005_owner_memberships",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794592428797,
+      "tag": "0006_group_messages",
+      "breakpoints": true
     }
   ]
 }

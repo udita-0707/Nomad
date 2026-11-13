@@ -362,3 +362,38 @@ export type ErrorCode =
 export type ErrorResponse = {
   error: { code: ErrorCode; message: string; fields?: Record<string, string> };
 };
+
+// ---------- Group chat (S1) ----------
+
+export const CHAT_MAX_LENGTH = 1000;
+export const CHAT_PAGE_SIZE = 50;
+
+export const chatMessageInputSchema = z.object({
+  body: z
+    .string()
+    .transform((s) => s.replace(/\r\n?/g, '\n').trim())
+    .pipe(
+      z
+        .string()
+        .min(1, 'Write a message')
+        // count code points like Postgres length(), so emoji can't pass zod and fail the DB check
+        .refine((s) => [...s].length <= CHAT_MAX_LENGTH, `Keep it to ${CHAT_MAX_LENGTH} characters`),
+    ),
+});
+export type ChatMessageInput = z.infer<typeof chatMessageInputSchema>;
+
+export const chatHistoryQuerySchema = z.object({
+  before: z.coerce.number().int().positive('Invalid cursor').optional(),
+});
+
+export type ChatMessage = {
+  id: number;
+  author: { id: string; name: string };
+  body: string;
+  createdAt: string; // ISO
+  mine: boolean; // the caller wrote it
+};
+/** GET /api/groups/:id/messages: oldest first within the page */
+export type ChatMessagesResponse = { messages: ChatMessage[]; hasMore: boolean };
+/** POST /api/groups/:id/messages */
+export type ChatMessageResponse = { message: ChatMessage };
