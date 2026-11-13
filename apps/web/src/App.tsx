@@ -5,6 +5,7 @@ import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
 import { ProfileSetup } from './pages/ProfileSetup';
 import { CreateGroup } from './pages/CreateGroup';
+import { SearchPage } from './pages/Search';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -34,6 +35,14 @@ export function App() {
         element={
           <ProtectedRoute requireProfile>
             <CreateGroup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <ProtectedRoute>
+            <SearchPage />
           </ProtectedRoute>
         }
       />
