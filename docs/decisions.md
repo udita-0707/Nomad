@@ -123,3 +123,11 @@ Entry format:
 - Why: matches the acceptance criteria exactly with the least code; the bookings and saved_options tables and endpoints 21–25 stay ready if booking is added later.
 - Trade-off / revisit if: nothing records which hotel the group picked; revisit if mentors or a later milestone want a real booking.
 - Files: packages/shared/src/index.ts, apps/api/src/{app.ts,routes/groupPage.ts,controllers/hotelController.ts,services/membership.ts,services/pricing.ts,validation/validateQuery.ts}, apps/web/src/{App.tsx,lib/api.ts,lib/useGroupPage.ts,pages/GroupPlan.tsx,pages/Dashboard.tsx,styles.css}, docs/api-contract.md
+
+## D-015 | 2026-11-13 19:51 | Membership status for owners and joinees
+- Context: after M5, owners couldn't see how many people had joined or who was pending, and joinees had no record of the groups they joined or requested.
+- Decision: GET /api/groups/mine now returns GroupSummary items (membersCount, pendingCount, ownerName, nights, booked) in three lists: groups (owned), joined (approved, not owner), requested (pending or rejected), all from one query over group_memberships. The owner card shows "X of N joined · K pending" and links to a new /groups/:id/members page that lists everyone with their status (from M5's requests?status=all) and offers approve and reject. The joinee dashboard adds "Groups you're part of" with Joined, Pending or Declined badges, and approved groups link to the group page.
+- Rejected: building GET /api/groups/:id (endpoint 13) now (/mine plus the M5 roster already cover both views), a new memberships endpoint (the contract already planned joined and requested on /mine).
+- Why: it reuses the M5 endpoints and only fills in the endpoint 12 extension the contract had already planned.
+- Trade-off / revisit if: joinees can't see the other members' names yet; build endpoint 13 if that's needed.
+- Files: packages/shared/src/index.ts, apps/api/src/controllers/groupController.ts, apps/web/src/{App.tsx,lib/useRequests.ts,pages/Dashboard.tsx,pages/GroupMembers.tsx,styles.css}, docs/api-contract.md

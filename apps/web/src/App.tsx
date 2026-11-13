@@ -8,6 +8,7 @@ import { CreateGroup } from './pages/CreateGroup';
 import { SearchPage } from './pages/Search';
 import { MatchesPage } from './pages/Matches';
 import { GroupPlanPage } from './pages/GroupPlan';
+import { GroupMembersPage } from './pages/GroupMembers';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -61,6 +62,14 @@ export function App() {
         element={
           <ProtectedRoute requireProfile>
             <GroupPlanPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/:id/members"
+        element={
+          <ProtectedRoute requireProfile>
+            <GroupMembersPage />
           </ProtectedRoute>
         }
       />
