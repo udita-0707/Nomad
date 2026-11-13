@@ -138,7 +138,7 @@ export function GroupChat({ groupId }: { groupId: string }) {
   return (
     <section className="chat-card" aria-label="Group chat">
       <h2>Group chat</h2>
-      <p className="chat-helper">Plan with your group here. Only members can see this.</p>
+      <p className="chat-helper">Only group members can see this chat.</p>
       <div className="chat-log-wrap">
         <div className="chat-log" ref={listRef} onScroll={onScroll} role="log" aria-live="polite" aria-label="Messages">
           {hasMoreOlder && sorted.length > 0 && (
@@ -148,7 +148,7 @@ export function GroupChat({ groupId }: { groupId: string }) {
           )}
           {earlier.isError && <p className="chat-note">Could not load earlier messages. Try again.</p>}
           {latest.isLoading && <p className="chat-note">Loading messages…</p>}
-          {latest.data && sorted.length === 0 && <p className="chat-empty">No messages yet. Say hello and start planning.</p>}
+          {latest.data && sorted.length === 0 && <p className="chat-empty">No messages yet.</p>}
           {sorted.map((m, i) => {
             const prev = sorted[i - 1];
             const continued = prev && prev.author.id === m.author.id && Date.parse(m.createdAt) - Date.parse(prev.createdAt) < GROUP_WINDOW_MS;
@@ -173,7 +173,7 @@ export function GroupChat({ groupId }: { groupId: string }) {
           ref={inputRef}
           rows={3}
           maxLength={CHAT_MAX_LENGTH}
-          placeholder="Write a message. Enter sends, Shift+Enter adds a line."
+          placeholder="Write a message"
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={onKeyDown}
