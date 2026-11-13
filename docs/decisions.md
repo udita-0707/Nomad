@@ -115,3 +115,11 @@ Entry format:
 - Why: one tested query gives correct results, and new groups match exactly like seeded ones.
 - Trade-off / revisit if: no pagination (12 seeded groups); revisit ranking if judges ask for a score.
 - Files: apps/api/src/services/matching.ts, apps/api/src/controllers/{searchController,groupController}.ts, apps/api/src/routes/searches.ts, apps/api/drizzle/0005_owner_memberships.sql, apps/api/drizzle/meta/*, apps/web/src/lib/{api,useSearch}.ts, apps/web/src/pages/{Search,Matches}.tsx, apps/web/src/App.tsx, apps/web/src/styles.css, docs/api-contract.md
+
+## D-014 | 2026-11-13 19:30 | M6 hotel compare with a confirm-only Book popup
+- Context: M6 criteria ask members to compare hotels for the group's city and dates with per-member cost, and say "No actual booking creation is needed"; the contract had also planned saved options and a stored, immutable booking (endpoints 21–25).
+- Decision: build only GET /api/groups/:id/hotels (approved members only, 403 otherwise) with one SQL query: rooms = ceil(members / max_adults), every night check-in..check-out−1 needs rooms_left ≥ rooms, total = price × rooms × nights, per member = round(total / members, 2), recomputed on every call; the Book button opens a native <dialog> confirm and only shows a success message; context adds the city timezone; hotel photos and credits are served by the API.
+- Rejected: storing a mock booking (not asked for, and it would lock the group), saved options (not in the criteria), pricing in JavaScript (a second copy of the availability rule).
+- Why: matches the acceptance criteria exactly with the least code; the bookings and saved_options tables and endpoints 21–25 stay ready if booking is added later.
+- Trade-off / revisit if: nothing records which hotel the group picked; revisit if mentors or a later milestone want a real booking.
+- Files: packages/shared/src/index.ts, apps/api/src/{app.ts,routes/groupPage.ts,controllers/hotelController.ts,services/membership.ts,services/pricing.ts,validation/validateQuery.ts}, apps/web/src/{App.tsx,lib/api.ts,lib/useGroupPage.ts,pages/GroupPlan.tsx,pages/Dashboard.tsx,styles.css}, docs/api-contract.md

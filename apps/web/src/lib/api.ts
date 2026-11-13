@@ -3,6 +3,8 @@ import type {
   DashboardResponse,
   ErrorResponse,
   HealthResponse,
+  HotelOptionsResponse,
+  HotelSearchFilters,
   LoginRequest,
   ProfileInput,
   ProfileResponse,
@@ -65,4 +67,9 @@ export const api = {
   getGroupRequests: (groupId: string, status: 'pending' | 'all' = 'pending') => request<JoinRequestsResponse>(`/groups/${encodeURIComponent(groupId)}/requests?status=${status}`),
   decideGroupRequest: (groupId: string, travellerId: string, status: 'approved' | 'rejected') => request<JoinRequestResponse>(`/groups/${encodeURIComponent(groupId)}/requests/${encodeURIComponent(travellerId)}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   cancelJoinRequest: (groupId: string) => request<void>(`/groups/${encodeURIComponent(groupId)}/requests/me`, { method: 'DELETE' }),
+  getGroupHotels: (id: string, filters: HotelSearchFilters) => {
+    const query = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => value !== undefined && query.set(key, String(value)));
+    return request<HotelOptionsResponse>(`/groups/${encodeURIComponent(id)}/hotels?${query}`);
+  },
 };
