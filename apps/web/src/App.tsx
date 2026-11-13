@@ -16,7 +16,7 @@ export function App() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireProfile>
             <Dashboard />
           </ProtectedRoute>
         }
@@ -32,7 +32,7 @@ export function App() {
       <Route
         path="/groups/new"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requireProfile>
             <CreateGroup />
           </ProtectedRoute>
         }
