@@ -48,7 +48,11 @@ export function SearchPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [profileMissing, setProfileMissing] = useState(false);
+  const [countryCode, setCountryCode] = useState('JP');
   const profile = profileData?.profile;
+
+  const countries = Array.from(new Map((catalog?.destinationCities ?? []).map((city) => [city.countryCode, { code: city.countryCode, name: city.countryName }])).values()).sort((a, b) => a.name.localeCompare(b.name));
+  const countryCities = (catalog?.destinationCities ?? []).filter((city) => city.countryCode === countryCode);
 
   useEffect(() => {
     if (profile) {
@@ -60,6 +64,13 @@ export function SearchPage() {
       }));
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (catalog && !countryCities.some((city) => city.name === form.city)) {
+      const firstCity = countryCities[0]?.name;
+      if (firstCity) setForm((current) => ({ ...current, city: firstCity }));
+    }
+  }, [catalog, countryCode]);
 
   const interestGroups = useMemo(() => groupByCategory(catalog?.interests ?? []), [catalog]);
 
@@ -135,8 +146,9 @@ export function SearchPage() {
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="group-form-grid">
             <label>Home city <select value={form.homeCity} onChange={(event) => update('homeCity', event.target.value as typeof form.homeCity)}>{(catalog?.departureCities ?? []).map((c) => <option key={c.city} value={c.city}>{c.city} ({c.airport})</option>)}</select>{fieldErrors.homeCity && <small className="field-error">{fieldErrors.homeCity}</small>}</label>
-            <label>Destination <select value={form.city} onChange={(event) => update('city', event.target.value as typeof form.city)}>{(catalog?.destinationCities ?? []).map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}</select>{fieldErrors.city && <small className="field-error">{fieldErrors.city}</small>}</label>
+            <label>Country <select value={countryCode} onChange={(event) => { setCountryCode(event.target.value); const firstCity = catalog?.destinationCities.find((city) => city.countryCode === event.target.value)?.name; if (firstCity) update('city', firstCity); }} disabled={catalogLoading || countries.length === 0}>{countries.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}</select></label>
           </div>
+          <label>Destination city <select value={form.city} onChange={(event) => update('city', event.target.value as typeof form.city)} disabled={catalogLoading || countryCities.length === 0}>{countryCities.map((city) => <option key={city.name} value={city.name}>{city.name}</option>)}</select>{fieldErrors.city && <small className="field-error">{fieldErrors.city}</small>}</label>
           <div className="group-form-grid">
             <label>Check-in <input type="date" min={GROUP_DATE_MIN} max={GROUP_DATE_MAX} value={form.checkIn} onChange={(event) => updateCheckIn(event.target.value)} aria-invalid={Boolean(fieldErrors.checkIn)} />{fieldErrors.checkIn && <small className="field-error">{fieldErrors.checkIn}</small>}</label>
             <label>Check-out <input type="date" min={form.checkIn ? nextDay(form.checkIn) : GROUP_DATE_MIN} max={GROUP_DATE_MAX} value={form.checkOut} onChange={(event) => update('checkOut', event.target.value)} aria-invalid={Boolean(fieldErrors.checkOut)} />{fieldErrors.checkOut && <small className="field-error">{fieldErrors.checkOut}</small>}</label>

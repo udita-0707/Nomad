@@ -206,7 +206,7 @@ export type SearchResponse = { search: Search; matches: Match[] };
 
 /** GET /api/catalog */
 export type CatalogResponse = {
-  destinationCities: { name: DestinationCity; countryCode: string; timezone: string }[];
+  destinationCities: { name: DestinationCity; countryCode: string; countryName: string; timezone: string }[];
   departureCities: { city: HomeCity; airport: string }[];
   interests: { id: InterestId; label: string; category: string }[];
   dateWindow: { from: string; to: string };
