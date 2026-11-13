@@ -1,6 +1,6 @@
 # Nomad API contract (iteration 1)
 
-Base path: `/api`. All bodies are JSON. Auth uses an httpOnly cookie (`nomad_sid`) set by the API; the frontend sends it with `credentials: 'include'`.
+Base path: `/api`. All bodies are JSON. Auth uses an httpOnly cookie (`sid`, httpOnly, SameSite=Lax, Secure in production, 7 days) set by the API; the frontend sends it with `credentials: 'include'`.
 Types live in `packages/shared/src/index.ts`. Keep this file and that one in sync.
 
 ## Error format
@@ -39,14 +39,14 @@ Every error response:
 
 ## Endpoints
 
-| Method | Path             | Auth   | Request body                                    | Success                                            |
-| ------ | ---------------- | ------ | ----------------------------------------------- | -------------------------------------------------- |
-| GET    | /api/health      | no     | –                                               | 200 `{ "status": "ok", "db": "up" \| "down" }`     |
-| POST   | /api/auth/signup | no     | `{ "email", "password" }` (password 8–72 chars) | 201 `{ "user" }` + sets cookie                     |
-| POST   | /api/auth/login  | no     | `{ "email", "password" }`                       | 200 `{ "user" }` + sets cookie                     |
-| POST   | /api/auth/logout | cookie | –                                               | 204, session deleted, cookie cleared               |
-| GET    | /api/auth/me     | yes    | –                                               | 200 `{ "user" }`                                   |
-| GET    | /api/dashboard   | yes    | –                                               | 200 `{ "user", "options": ["creator", "seeker"] }` |
+| Method | Path             | Auth   | Request body                                    | Success                                                        |
+| ------ | ---------------- | ------ | ----------------------------------------------- | -------------------------------------------------------------- |
+| GET    | /api/health      | no     | –                                               | 200 `{ "status": "ok", "db": "up" \| "down" }`                 |
+| POST   | /api/auth/signup | no     | `{ "email", "password" }` (password 8–72 chars) | 201 `{ "user" }` + sets cookie                                 |
+| POST   | /api/auth/login  | no     | `{ "email", "password" }`                       | 200 `{ "user" }` + sets cookie                                 |
+| POST   | /api/auth/logout | cookie | –                                               | 204, session deleted, cookie cleared                           |
+| GET    | /api/auth/me     | yes    | –                                               | 200 `{ "user" }`                                               |
+| GET    | /api/dashboard   | yes    | –                                               | 200 `{ "user", "options": ["group_creator", "group_seeker"] }` |
 
 ## Usernames
 

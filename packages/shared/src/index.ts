@@ -32,7 +32,7 @@ export type PublicUser = z.infer<typeof publicUserSchema>;
 export type UserResponse = { user: PublicUser };
 
 /** GET /api/dashboard */
-export type DashboardOption = 'creator' | 'seeker';
+export type DashboardOption = 'group_creator' | 'group_seeker';
 export type DashboardResponse = { user: PublicUser; options: DashboardOption[] };
 
 /** GET /api/health */

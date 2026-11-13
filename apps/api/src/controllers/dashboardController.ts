@@ -1,8 +1,12 @@
 import type { Request, Response } from 'express';
-import { AppError } from '../middleware/errorHandler.js';
+import type { DashboardResponse } from '@nomad/shared';
+import { toPublicUser } from './authController.js';
 
-// TODO: GET /api/dashboard
-// Return 200 { user, options: ['creator', 'seeker'] } using res.locals.user.
-export async function getDashboard(_req: Request, _res: Response) {
-  throw new AppError(501, 'INTERNAL', 'Dashboard not implemented yet');
+// GET /api/dashboard (requireAuth)
+export async function getDashboard(req: Request, res: Response) {
+  const body: DashboardResponse = {
+    user: toPublicUser(req.user!),
+    options: ['group_creator', 'group_seeker'],
+  };
+  res.json(body);
 }
