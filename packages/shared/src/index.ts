@@ -201,6 +201,41 @@ export type CatalogResponse = {
   dateWindow: { from: string; to: string };
 };
 
+// ---------- Lane C: group page (M6) ----------
+
+export const HOTEL_SORTS = ['perMember', 'rating', 'stars'] as const;
+
+/** GET /api/groups/:id/hotels query string. Values arrive as strings. */
+export const hotelSearchQuerySchema = z.object({
+  sort: z.enum(HOTEL_SORTS).default('perMember'),
+  refundable: z.literal('true').optional(),
+  minStars: z.coerce.number().int().min(1, 'Stars must be 1 to 5').max(5, 'Stars must be 1 to 5').optional(),
+});
+export type HotelSearchQuery = z.infer<typeof hotelSearchQuerySchema>;
+export type HotelSearchFilters = z.input<typeof hotelSearchQuerySchema>;
+
+export type HotelOption = {
+  hotel: { id: string; name: string; stars: number; rating: number; image: string | null; familyFriendly: boolean };
+  room: { id: string; name: string; type: string; maxAdults: number; refundable: boolean; pricePerNightInr: number };
+  roomsNeeded: number;
+  totalInr: number;
+  perMemberInr: number;
+  minRoomsLeft: number;
+};
+
+/** GET /api/groups/:id/hotels */
+export type HotelOptionsResponse = {
+  context: {
+    city: DestinationCity;
+    checkIn: string;
+    checkOut: string;
+    nights: number;
+    membersCount: number;
+    timezone: string;
+  };
+  options: HotelOption[];
+};
+
 // ---------- Responses ----------
 
 export const publicUserSchema = z.object({
