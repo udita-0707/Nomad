@@ -13,6 +13,7 @@ async function loadCatalog(): Promise<CatalogResponse> {
       .select({
         name: destinationCities.name,
         countryCode: destinationCities.countryCode,
+        countryName: destinationCountries.name,
         timezone: destinationCountries.timezone,
       })
       .from(destinationCities)
