@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { GENDERS, GENDER_PREFERENCES, HOME_CITIES, INTERESTS, profileRequestSchema, type ProfileInput } from '@nomad/shared';
 import { Logo } from '../components/Logo';
@@ -10,6 +10,7 @@ const EMPTY: ProfileInput = { name: '', gender: 'FEMALE', homeCity: 'Bengaluru',
 
 export function ProfileSetup() {
   const navigate = useNavigate();
+  const notice = (useLocation().state as { notice?: string } | null)?.notice;
   const queryClient = useQueryClient();
   const { data, isLoading } = useProfile();
   const [form, setForm] = useState<ProfileInput>(EMPTY);
@@ -57,6 +58,7 @@ export function ProfileSetup() {
         <div className="profile-setup-intro"><p className="eyebrow">Welcome to Nomad</p><h1>Tell us a little<br /><em>about you.</em></h1><p>Your profile helps Nomad connect you with people who travel like you do.</p><div className="profile-flow-note"><span>✦</span><div><strong>Your details stay with your account.</strong><small>Complete this once, then continue to your travel space.</small></div></div></div>
         <form className="profile-form" onSubmit={submit} noValidate>
           <div className="profile-form-heading"><p className="eyebrow">M1 · Profile setup</p><h2>Build your traveller profile.</h2></div>
+          {notice && <p className="already-signed" role="status">{notice}</p>}
           {errors.form && <p className="form-error" role="alert">{errors.form}</p>}
           <label>Name<input value={form.name} onChange={(event) => update('name', event.target.value)} placeholder="Your name" autoComplete="name" aria-invalid={Boolean(errors.name)} />{errors.name && <small className="field-error">{errors.name}</small>}</label>
           <div className="profile-form-grid"><label>Gender<select value={form.gender} onChange={(event) => update('gender', event.target.value as ProfileInput['gender'])}>{GENDERS.map((gender) => <option key={gender} value={gender}>{gender === 'FEMALE' ? 'Female' : 'Male'}</option>)}</select>{errors.gender && <small className="field-error">{errors.gender}</small>}</label><label>Origin city<select value={form.homeCity} onChange={(event) => update('homeCity', event.target.value as ProfileInput['homeCity'])}>{HOME_CITIES.map((city) => <option key={city} value={city}>{city}</option>)}</select>{errors.homeCity && <small className="field-error">{errors.homeCity}</small>}</label></div>
