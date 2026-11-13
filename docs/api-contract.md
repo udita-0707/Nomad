@@ -6,14 +6,14 @@ Status: **Built** = on main and working. **Planned** = agreed shape, not built y
 
 ## Proposed choices
 
-P1 and P3 were confirmed with M4 (D-013). P2 and P4 are still defaults, marked "proposed – confirm" where they appear.
+P1 and P3 were confirmed with M4 (D-013), P4 with the mock booking (D-016). P2 is still a default, marked "proposed – confirm" where they appear.
 
 | # | Choice | Where it matters |
 | - | ------ | ---------------- |
 | P1 (confirmed) | The group owner is stored as an **approved** row in `group_memberships`. `membersCount` always includes the owner. | Group size rule, gender rule, `POST /api/groups` |
 | P2 (proposed) | A join request carries the `searchId` it came from, and the server **re-checks all six rules** before saving it. | `POST /api/groups/:id/requests` |
 | P3 (confirmed) | Matches are ranked by most shared interests, then most shared nights, then smallest budget difference, then earliest check-in, then group id. | `POST /api/searches` |
-| P4 (proposed) | **Any approved member** can book, once the group has **at least 2** approved members. | `POST /api/groups/:id/booking` |
+| P4 (confirmed) | **Any approved member** can book, once the group has **at least 2** approved members. | `POST /api/groups/:id/booking` |
 
 P1 is built: `createGroup` inserts the owner's approved membership in the same transaction as the group, and migration 0005 backfilled groups created before that.
 
@@ -52,10 +52,10 @@ Every error response has this shape (`ErrorResponse`):
 | NOT_PENDING | 409 | Approving, rejecting or cancelling a request that is not pending | Planned |
 | GROUP_FULL | 409 | Approving would exceed `maxSize` | Planned |
 | GROUP_BOOKED | 409 | The group is booked: no new requests, approvals or saved options | Planned |
-| NOT_AVAILABLE | 409 | That room is not free on every night for the rooms needed | Planned |
+| NOT_AVAILABLE | 409 | That room is not free on every night for the rooms needed | Built |
 | ALREADY_SAVED | 409 | This member already saved this room | Planned |
-| NOT_ENOUGH_MEMBERS | 409 | Booking with fewer than 2 approved members (P4) | Planned |
-| ALREADY_BOOKED | 409 | The group already has its one booking | Planned |
+| NOT_ENOUGH_MEMBERS | 409 | Booking with fewer than 2 approved members (P4) | Built |
+| ALREADY_BOOKED | 409 | The group already has its one booking | Built |
 | PROFILE_REQUIRED | 422 | The endpoint needs a traveller profile and there is none | Built |
 | INTERNAL | 500 | Anything else | Built |
 
@@ -88,8 +88,8 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 21 | POST /api/groups/:id/saved-options | member | M6 | Out of scope (D-014) | C |
 | 22 | GET /api/groups/:id/saved-options | member | M6 | Out of scope (D-014) | C |
 | 23 | DELETE /api/groups/:id/saved-options/:optionId | member | M6 | Out of scope (D-014) | C |
-| 24 | POST /api/groups/:id/booking | member | M6 | Out of scope (D-014) | C |
-| 25 | GET /api/groups/:id/booking | member | M6 | Out of scope (D-014) | C |
+| 24 | POST /api/groups/:id/booking | member | M6 | Built (mock, D-016) | C |
+| 25 | GET /api/groups/:id/booking | member | M6 | Built (mock, D-016) | C |
 
 ## Shared objects
 
@@ -136,7 +136,7 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 ### GroupSummary (built): `Group` plus
 
 ```json
-{ "ownerName": "Sarah", "nights": 5, "membersCount": 1, "pendingCount": 0, "booked": false }
+{ "ownerName": "Sarah", "nights": 5, "membersCount": 1, "pendingCount": 0, "booked": false, "bookedHotelName": null }
 ```
 
 `pendingCount` is the number of pending requests. It is filled only when the caller is the owner; otherwise it is `0`.
@@ -369,7 +369,7 @@ Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no req
 - Only approved members (owner included) may call it; a pending or rejected requester gets 403.
 - **Errors:** 400 (bad query), 401, 403, 404, 422.
 
-**M6 scope note (D-014).** The M6 acceptance criteria say "No actual booking creation is needed". The Book button opens a confirm popup in the frontend and nothing is saved. Endpoints 21 to 25 below stay as the agreed shape in case booking is added later, but they are not built, and the `saved_options` and `bookings` tables stay unused.
+**M6 scope note (D-014, then D-016).** First built as a popup only, because the criteria say "No actual booking creation is needed". Confirming now saves a **mock booking** (endpoints 24 and 25) so every member sees it after refresh. Nothing is reserved with a hotel. Saved options (21 to 23) are still not built.
 
 ### 21. POST /api/groups/:id/saved-options (out of scope for M6, not built, lane C)
 
@@ -399,26 +399,28 @@ Response 204. Deletes the caller's own pending request. Errors: 401, 404 (no req
 
 Response 204. Only the member who saved the option can delete it. Errors: 401, 403, 404, 409 `GROUP_BOOKED`, 422.
 
-### 24. POST /api/groups/:id/booking (out of scope for M6, not built, lane C)
+### 24. POST /api/groups/:id/booking (built, mock booking, lane C)
 
-- **Body** (`bookingRequestSchema`): `{ "roomId": "RM-KYO-001-A", "savedOptionId": "uuid, optional" }`. The frontend shows the confirm popup first; this call is the confirmation.
+- **Body** (`bookingRequestSchema`): `{ "roomId": "RM-KYO-001-A" }`. Any price in the body is ignored. (`savedOptionId` is left out until saved options exist.) The frontend shows the confirm popup first; this call is the confirmation.
 - **Response 201** `BookingResponse`:
 
   ```json
   { "booking": { "id": "BK-1A2B3C4D", "groupId": "G-01", "hotel": {}, "room": {}, "roomsCount": 1, "checkIn": "2027-04-10", "checkOut": "2027-04-15", "nights": 5, "membersCount": 2, "totalInr": 23800, "perMemberInr": 11900, "bookedBy": { "id": "T-001", "name": "Sarah" }, "createdAt": "..." } }
   ```
 
-- **Errors:** 400, 401, 403, 404, 409 `NOT_ENOUGH_MEMBERS` (P4), 409 `NOT_AVAILABLE`, 409 `ALREADY_BOOKED`, 422.
+  `hotel` = `{ id, name, stars, rating, image }`, `room` = `{ id, name, type }`.
+
+- **Errors:** 400, 401, 403, 404, 409 `NOT_ENOUGH_MEMBERS` (P4), 409 `NOT_AVAILABLE` (also for a room outside the group's city), 409 `ALREADY_BOOKED` (also when two members confirm at the same moment), 422.
 - **Logic:**
   - Lock the group row.
-  - **Proposed – confirm (P4):** any approved member may book, and there must be at least 2 approved members.
+  - **P4 (confirmed):** any approved member may book, and there must be at least 2 approved members.
   - Recompute the price, then insert the booking.
   - `UNIQUE(group_id)` allows one booking per group. Triggers make the booking immutable and close the group to new requests and approvals (D-009).
   - `rooms_left` is not changed, because the catalog is read-only.
 
-### 25. GET /api/groups/:id/booking (out of scope for M6, not built, lane C)
+### 25. GET /api/groups/:id/booking (built, lane C)
 
-Response 200 `{ "booking": Booking | null }`. Errors: 401, 403, 404, 422.
+Response 200 `BookingResponse` = `{ "booking": Booking | null }`. Every approved member sees the same booking. `GET /api/groups/mine` also returns `bookedHotelName` on each `GroupSummary` for the dashboard badge. Errors: 401, 403, 404, 422.
 
 ## Ownership and parallel work
 
