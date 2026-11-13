@@ -108,6 +108,37 @@ export type Group = GroupCreateRequest & {
 export type GroupResponse = { group: Group };
 export type GroupsResponse = { groups: Group[] };
 
+// ---------- Group requests / M5 ----------
+
+export const joinRequestSchema = z.object({ searchId: z.string().uuid() });
+export type JoinRequest = z.infer<typeof joinRequestSchema>;
+
+export const decideRequestSchema = z.object({ status: z.enum(['approved', 'rejected']) });
+export type DecideRequest = z.infer<typeof decideRequestSchema>;
+
+export type JoinRequestStatus = 'pending' | 'approved' | 'rejected';
+export type MemberCard = {
+  id: string;
+  name: string;
+  age: number | null;
+  gender: (typeof GENDERS)[number];
+  homeCity: HomeCity;
+  interests: InterestId[];
+};
+export type RequestSearch = { id: string; checkIn: string; checkOut: string; budgetInr: number };
+export type JoinRequestItem = {
+  groupId: string;
+  travellerId: string;
+  status: JoinRequestStatus;
+  requestedAt: string;
+  decidedAt: string | null;
+  traveller: MemberCard;
+  sharedInterests: InterestId[];
+  search: RequestSearch | null;
+};
+export type JoinRequestResponse = { request: JoinRequestItem };
+export type JoinRequestsResponse = { requests: JoinRequestItem[] };
+
 // ---------- Lane A: search (M3, M4) ----------
 
 export type InterestId = (typeof INTERESTS)[number]['id'];
@@ -202,6 +233,12 @@ export type ErrorCode =
   | 'UNAUTHENTICATED'
   | 'PROFILE_REQUIRED'
   | 'NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'ALREADY_REQUESTED'
+  | 'NOT_A_MATCH'
+  | 'NOT_PENDING'
+  | 'GROUP_FULL'
+  | 'GROUP_BOOKED'
   | 'INTERNAL';
 
 export type ErrorResponse = {
