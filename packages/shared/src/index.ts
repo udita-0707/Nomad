@@ -8,6 +8,14 @@ import { z } from 'zod';
 // TODO: agree on final password rules with the team.
 export const signupRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
+  username: z
+    .string()
+    .trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(24, 'Username must be 24 characters or fewer')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Use only letters, numbers, hyphens, or underscores')
+    .optional()
+    .or(z.literal('')),
   password: z.string().min(8).max(72), // bcrypt only uses the first 72 bytes
 });
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
@@ -43,6 +51,7 @@ export type HealthResponse = { status: 'ok'; db: 'up' | 'down' };
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'EMAIL_TAKEN'
+  | 'USERNAME_TAKEN'
   | 'INVALID_CREDENTIALS'
   | 'UNAUTHENTICATED'
   | 'NOT_FOUND'
