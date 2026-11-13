@@ -113,6 +113,7 @@ export type GroupSummary = Group & {
   membersCount: number;
   pendingCount: number;
   booked: boolean;
+  bookedHotelName: string | null;
 };
 export type RequestedGroup = GroupSummary & { requestStatus: 'pending' | 'rejected' };
 /** GET /api/groups/mine: groups I own, groups I joined (approved, not owner), and my open or declined requests. */
@@ -233,6 +234,28 @@ export type HotelOption = {
   minRoomsLeft: number;
 };
 
+export const bookingRequestSchema = z.object({ roomId: z.string().trim().min(1, 'Choose a room') });
+export type BookingRequest = z.infer<typeof bookingRequestSchema>;
+
+/** A saved (mock) booking: one per group, never changed. Nothing is booked with a real hotel. */
+export type Booking = {
+  id: string;
+  groupId: string;
+  hotel: { id: string; name: string; stars: number; rating: number; image: string | null };
+  room: { id: string; name: string; type: string };
+  roomsCount: number;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  membersCount: number;
+  totalInr: number;
+  perMemberInr: number;
+  bookedBy: { id: string; name: string };
+  createdAt: string;
+};
+/** POST /api/groups/:id/booking (201, booking set), GET /api/groups/:id/booking (200, booking or null) */
+export type BookingResponse = { booking: Booking | null };
+
 /** GET /api/groups/:id/hotels */
 export type HotelOptionsResponse = {
   context: {
@@ -284,6 +307,9 @@ export type ErrorCode =
   | 'NOT_PENDING'
   | 'GROUP_FULL'
   | 'GROUP_BOOKED'
+  | 'NOT_AVAILABLE'
+  | 'NOT_ENOUGH_MEMBERS'
+  | 'ALREADY_BOOKED'
   | 'INTERNAL';
 
 export type ErrorResponse = {

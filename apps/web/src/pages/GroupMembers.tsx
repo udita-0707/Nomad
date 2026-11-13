@@ -47,7 +47,7 @@ export function GroupMembersPage() {
                 <div><dt>Where</dt><dd>{group.city}</dd></div>
                 <div><dt>Dates</dt><dd>{group.checkIn} → {group.checkOut}</dd></div>
                 <div><dt>Pending</dt><dd>{pending.length}</dd></div>
-                <div><dt>Spots left</dt><dd>{Math.max(0, group.maxSize - joined.length)}</dd></div>
+                <div><dt>Spots left</dt><dd>{Math.max(0, group.maxSize - joined.length)}</dd></div>{group.bookedHotelName && <div><dt>Booked</dt><dd>{group.bookedHotelName}</dd></div>}
               </dl>
               <div className="members-capacity"><div className="capacity-bar" role="progressbar" aria-label="Members joined" aria-valuemin={0} aria-valuemax={group.maxSize} aria-valuenow={joined.length}><i style={{ width: `${Math.min(100, (joined.length / group.maxSize) * 100)}%` }} /></div></div>
             </div>
