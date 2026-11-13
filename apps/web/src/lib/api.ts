@@ -5,6 +5,8 @@ import type {
   HealthResponse,
   BookingRequest,
   BookingResponse,
+  ChatMessageResponse,
+  ChatMessagesResponse,
   HotelOptionsResponse,
   HotelSearchFilters,
   LoginRequest,
@@ -86,4 +88,8 @@ export const api = {
   getBooking: (id: string) => request<BookingResponse>(`/groups/${encodeURIComponent(id)}/booking`),
   bookGroup: (id: string, body: BookingRequest) =>
     request<BookingResponse>(`/groups/${encodeURIComponent(id)}/booking`, { method: 'POST', body: JSON.stringify(body) }),
+  getMessages: (id: string, before?: number) =>
+    request<ChatMessagesResponse>(`/groups/${encodeURIComponent(id)}/messages${before ? `?before=${before}` : ''}`),
+  postMessage: (id: string, body: string) =>
+    request<ChatMessageResponse>(`/groups/${encodeURIComponent(id)}/messages`, { method: 'POST', body: JSON.stringify({ body }) }),
 };
