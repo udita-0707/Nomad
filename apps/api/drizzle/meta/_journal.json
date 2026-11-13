@@ -15,6 +15,13 @@
       "when": 1794557797584,
       "tag": "0001_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794559565726,
+      "tag": "0002_travellers",
+      "breakpoints": true
     }
   ]
 }
