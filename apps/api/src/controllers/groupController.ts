@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { desc, eq } from 'drizzle-orm';
 import type { Group, GroupCreateRequest, GroupResponse, GroupsResponse } from '@nomad/shared';
 import { db } from '../db/index.js';
-import { groups, travellers, type GroupRow } from '../db/schema.js';
+import { groups, travellers, type Group as GroupRow } from '../db/schema.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 function toGroup(row: GroupRow): Group {

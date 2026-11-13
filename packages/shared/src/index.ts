@@ -89,7 +89,7 @@ export const groupCreateRequestSchema = z
     city: z.enum(DESTINATION_CITIES),
     checkIn: groupDateSchema,
     checkOut: groupDateSchema,
-    maxSize: z.number().int().min(1).max(4),
+    maxSize: z.number().int().min(2).max(4),
     budgetInr: z.number().int().positive().max(10_000_000),
     itinerary: z.string().trim().max(2000, 'Itinerary must be 2,000 characters or fewer').default(''),
   })

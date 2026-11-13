@@ -56,7 +56,7 @@ Every error response:
 
 ## M2 group owner
 
-`city` must be one of `Tokyo`, `Kyoto`, `Osaka`, `Dubai`, or `Abu Dhabi`. Both dates must be between `2027-04-01` and `2027-04-20`, with check-out after check-in. `maxSize` is the total group size from 1 through 4, and `budgetInr` is a positive whole-number approximate budget per person. The API rejects group creation until the authenticated user has a linked row in `travellers`.
+`city` must be one of `Tokyo`, `Kyoto`, `Osaka`, `Dubai`, or `Abu Dhabi`. Both dates must be between `2027-04-01` and `2027-04-20`, with check-out after check-in. `maxSize` is the total group size from 2 through 4, matching the merged M1–M6 database schema, and `budgetInr` is a positive whole-number approximate budget per person. The API rejects group creation until the authenticated user has a linked row in `travellers`.
 
 ## Usernames
 
