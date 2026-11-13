@@ -26,6 +26,9 @@ type MatchRow = {
   shared_interests: InterestId[];
   budget_inr: number;
   budget_diff: number;
+  members: Match['members'];
+  female_count: number;
+  male_count: number;
 };
 
 function matchQuery(s: Seeker & SeekerOptions, onlyGroupId?: string): SQL {
@@ -49,7 +52,16 @@ function matchQuery(s: Seeker & SeekerOptions, onlyGroupId?: string): SQL {
     )
     SELECT id, name, city, to_char(check_in, 'YYYY-MM-DD') AS check_in, to_char(check_out, 'YYYY-MM-DD') AS check_out,
            members_count, max_size, owner_name, shared_nights, shared_interests, budget_inr,
-           abs(budget_inr - ${s.budgetInr}::int)::int AS budget_diff
+           abs(budget_inr - ${s.budgetInr}::int)::int AS budget_diff,
+           COALESCE((SELECT json_agg(json_build_object(
+             'id', t.id, 'name', t.name, 'gender', t.gender, 'isOwner', t.id = g.owner_id
+           ) ORDER BY (t.id = g.owner_id) DESC, m.decided_at ASC, t.id ASC)
+           FROM group_memberships m JOIN travellers t ON t.id = m.traveller_id
+           WHERE m.group_id = g.id AND m.status = 'approved'), '[]'::json) AS members,
+           (SELECT count(*)::int FROM group_memberships m JOIN travellers t ON t.id = m.traveller_id
+            WHERE m.group_id = g.id AND m.status = 'approved' AND t.gender = 'FEMALE') AS female_count,
+           (SELECT count(*)::int FROM group_memberships m JOIN travellers t ON t.id = m.traveller_id
+            WHERE m.group_id = g.id AND m.status = 'approved' AND t.gender = 'MALE') AS male_count
     FROM g
     WHERE shared_nights >= 2
       AND 5 * abs(budget_inr - ${s.budgetInr}::int) <= 2 * LEAST(budget_inr, ${s.budgetInr}::int)
@@ -78,6 +90,9 @@ function toMatch(r: MatchRow): Match {
     sharedInterests: r.shared_interests,
     budgetInr: r.budget_inr,
     budgetDiffInr: r.budget_diff,
+    members: r.members ?? [],
+    femaleCount: Number(r.female_count ?? 0),
+    maleCount: Number(r.male_count ?? 0),
   };
 }
 

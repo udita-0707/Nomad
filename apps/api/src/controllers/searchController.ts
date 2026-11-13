@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
 import { and, eq } from 'drizzle-orm';
-import type { Search, SearchRequest, SearchResponse } from '@nomad/shared';
+import type { MatchFilters, Search, SearchRequest, SearchResponse } from '@nomad/shared';
 import { db } from '../db/index.js';
 import { searches, travellers, type Traveller } from '../db/schema.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { findMatches } from '../services/matching.js';
+import { applyMatchFilters } from '../services/matchFilters.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -33,10 +34,11 @@ function toSearch(row: SearchRow): Search {
   };
 }
 
-async function respond(res: Response, status: number, row: SearchRow) {
+async function respond(res: Response, status: number, row: SearchRow, filters: MatchFilters = { interests: [], gender: 'ANY' }) {
   const search = toSearch(row);
-  const matches = await findMatches({ ...search, travellerId: row.travellerId });
-  const body: SearchResponse = { search, matches };
+  const allMatches = await findMatches({ ...search, travellerId: row.travellerId });
+  const matches = applyMatchFilters(allMatches, filters);
+  const body: SearchResponse = { search, matches, totalMatches: allMatches.length, filters };
   res.status(status).json(body);
 }
 
@@ -63,5 +65,8 @@ export async function getSearchMatches(req: Request, res: Response) {
         .where(and(eq(searches.id, id), eq(searches.travellerId, traveller.id)))
     : [];
   if (!row) throw new AppError(404, 'NOT_FOUND', 'Search not found');
-  await respond(res, 200, row);
+  const filters = req.query as unknown as MatchFilters;
+  const invalidInterest = filters.interests.find((interest) => !row.interests.includes(interest));
+  if (invalidInterest) throw new AppError(400, 'VALIDATION_ERROR', 'Invalid query string', { interests: 'Pick interests from your search' });
+  await respond(res, 200, row, filters);
 }

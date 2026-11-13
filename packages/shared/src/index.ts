@@ -199,10 +199,38 @@ export type Match = {
   sharedInterests: InterestId[];
   budgetInr: number;
   budgetDiffInr: number;
+  members: { id: string; name: string; gender: (typeof GENDERS)[number]; isOwner: boolean }[];
+  femaleCount: number;
+  maleCount: number;
 };
 
 /** POST /api/searches (201), GET /api/searches/:id/matches (200) */
-export type SearchResponse = { search: Search; matches: Match[] };
+export const GENDER_COMPOSITIONS = ['ANY', 'ALL_FEMALE', 'ALL_MALE', 'MIXED'] as const;
+export type GenderComposition = (typeof GENDER_COMPOSITIONS)[number];
+
+const queryInterestSchema = z.preprocess(
+  (value, ctx) => {
+    if (value === undefined || value === '') return [];
+    if (Array.isArray(value) && value.length === 0) return [];
+    if (Array.isArray(value)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Use one comma-separated interests parameter' });
+      return z.NEVER;
+    }
+    if (typeof value !== 'string') {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Invalid interests filter' });
+      return z.NEVER;
+    }
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  },
+  z.array(z.enum(INTEREST_IDS)).max(16).refine((items) => new Set(items).size === items.length, 'Interests must not repeat'),
+);
+
+export const matchFiltersQuerySchema = z.object({
+  interests: queryInterestSchema.default([]),
+  gender: z.enum(GENDER_COMPOSITIONS).default('ANY'),
+});
+export type MatchFilters = z.infer<typeof matchFiltersQuerySchema>;
+export type SearchResponse = { search: Search; matches: Match[]; totalMatches: number; filters: MatchFilters };
 
 /** GET /api/catalog */
 export type CatalogResponse = {
@@ -210,6 +238,25 @@ export type CatalogResponse = {
   departureCities: { city: HomeCity; airport: string }[];
   interests: { id: InterestId; label: string; category: string }[];
   dateWindow: { from: string; to: string };
+};
+
+export type ProfileGroup = {
+  id: string;
+  name: string;
+  city: DestinationCity;
+  checkIn: string;
+  checkOut: string;
+  role: 'owner' | 'member';
+  membersCount: number;
+  maxSize: number;
+  booked: boolean;
+};
+
+export type TravellerProfileResponse = {
+  traveller: { id: string; name: string; age: number | null; homeCity: HomeCity; homeAirport: string | null; interests: InterestId[] };
+  sharedInterests: InterestId[];
+  isMe: boolean;
+  groups: ProfileGroup[];
 };
 
 // ---------- Lane C: group page (M6) ----------
