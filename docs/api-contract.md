@@ -24,6 +24,7 @@ Every error response:
 | UNAUTHENTICATED     | 401    | No valid session cookie on a protected route              |
 | NOT_FOUND           | 404    | Unknown route                                             |
 | EMAIL_TAKEN         | 409    | Signup with an email that already exists                  |
+| USERNAME_TAKEN      | 409    | Signup with a username that already exists                |
 | INTERNAL            | 500    | Anything else                                             |
 
 ## User object
@@ -33,40 +34,23 @@ Every error response:
   "id": "uuid",
   "email": "a@b.com",
   "username": "sunny-otter-0427",
+  "usernameEditCount": 0,
   "createdAt": "2026-11-13T07:00:00.000Z"
 }
 ```
 
 ## Endpoints
 
-| Method | Path             | Auth   | Request body                                                         | Success                                                        |
-| ------ | ---------------- | ------ | -------------------------------------------------------------------- | -------------------------------------------------------------- |
-| GET    | /api/health      | no     | –                                                                    | 200 `{ "status": "ok", "db": "up" \| "down" }`                 |
-| POST   | /api/auth/signup | no     | `{ "email", "password" }` (password 8–72 chars)                      | 201 `{ "user" }` + sets cookie                                 |
-| POST   | /api/auth/login  | no     | `{ "email", "password" }`                                            | 200 `{ "user" }` + sets cookie                                 |
-| POST   | /api/auth/logout | cookie | –                                                                    | 204, session deleted, cookie cleared                           |
-| GET    | /api/auth/me     | yes    | –                                                                    | 200 `{ "user" }`                                               |
-| GET    | /api/dashboard   | yes    | –                                                                    | 200 `{ "user", "options": ["group_creator", "group_seeker"] }` |
-| GET    | /api/profile     | yes    | –                                                                    | 200 `{ "profile" }`, `profile` is `null` until saved           |
-| PUT    | /api/profile     | yes    | `{ "name", "gender", "homeCity", "interests", "genderPreference"? }` | 200 `{ "profile" }` (creates or replaces)                      |
+| Method | Path             | Auth   | Request body                                    | Success                                                        |
+| ------ | ---------------- | ------ | ----------------------------------------------- | -------------------------------------------------------------- |
+| GET    | /api/health      | no     | –                                               | 200 `{ "status": "ok", "db": "up" \| "down" }`                 |
+| POST   | /api/auth/signup | no     | `{ "email", "password", "username?" }` (password 8–72 chars) | 201 `{ "user" }` + sets cookie                         |
+| POST   | /api/auth/login  | no     | `{ "email", "password" }`                       | 200 `{ "user" }` + sets cookie                                 |
+| POST   | /api/auth/logout | cookie | –                                               | 204, session deleted, cookie cleared                           |
+| GET    | /api/auth/me     | yes    | –                                               | 200 `{ "user" }`                                               |
+| PATCH  | /api/auth/profile/username | yes | `{ "username" }` | 200 `{ "user" }`; one edit allowed per account |
+| GET    | /api/dashboard   | yes    | –                                               | 200 `{ "user", "options": ["group_creator", "group_seeker"] }` |
 
 ## Usernames
 
-Assigned by the API at signup: `adjective-noun-NNNN` (e.g. `brave-falcon-0815`). Unique in the database; the API retries with a new name on conflict.
-
-## Profile (M1)
-
-```json
-{
-  "name": "Priya Shah",
-  "gender": "FEMALE",
-  "homeCity": "Mumbai",
-  "interests": ["TEMPLES", "STREET_FOOD"],
-  "genderPreference": "SAME_GENDER",
-  "updatedAt": "2026-11-13T08:17:41.766Z"
-}
-```
-
-- `gender`: `FEMALE` or `MALE`. `homeCity`: `Bengaluru`, `Chennai`, `Delhi` or `Mumbai`. `interests`: 1 or more unique ids from `data/problem-3/interests.json`. `genderPreference`: `ANY` (default) or `SAME_GENDER`.
-- The allowed values live in `packages/shared` (`GENDERS`, `HOME_CITIES`, `INTERESTS`, `GENDER_PREFERENCES`) and match `data/problem-3/travellers.json`, so new users can be matched with the seeded travellers.
-- Invalid values return 400 `VALIDATION_ERROR` with `fields`.
+The API accepts an optional custom username (3–24 letters, numbers, hyphens, or underscores). If omitted, it assigns `adjective-noun-NNNN` (e.g. `brave-falcon-0815`). Usernames are unique in the database.
