@@ -3,6 +3,7 @@ import { Landing } from './pages/Landing';
 import { SignUp } from './pages/SignUp';
 import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
+import { ProfileSetup } from './pages/ProfileSetup';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -16,6 +17,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfileSetup />
           </ProtectedRoute>
         }
       />

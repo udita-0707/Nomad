@@ -3,6 +3,8 @@ import type {
   ErrorResponse,
   HealthResponse,
   LoginRequest,
+  ProfileInput,
+  ProfileResponse,
   SignupRequest,
   UserResponse,
 } from '@nomad/shared';
@@ -39,4 +41,7 @@ export const api = {
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<UserResponse>('/auth/me'),
   dashboard: () => request<DashboardResponse>('/dashboard'),
+  profile: () => request<ProfileResponse>('/profile'),
+  saveProfile: (body: ProfileInput) =>
+    request<ProfileResponse>('/profile', { method: 'PUT', body: JSON.stringify(body) }),
 };
