@@ -1,0 +1,1595 @@
+{
+  "id": "40d7260c-a512-43af-8185-9878349ad15f",
+  "prevId": "cb8df24a-02cb-41a5-80cc-c06d43c48057",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.availability": {
+      "name": "availability",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_left": {
+          "name": "rooms_left",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "availability_room_id_rooms_room_id_fk": {
+          "name": "availability_room_id_rooms_room_id_fk",
+          "tableFrom": "availability",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "room_id"
+          ],
+          "columnsTo": [
+            "room_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "availability_room_id_date_pk": {
+          "name": "availability_room_id_date_pk",
+          "columns": [
+            "room_id",
+            "date"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "availability_date_check": {
+          "name": "availability_date_check",
+          "value": "\"availability\".\"date\" BETWEEN '2027-04-01' AND '2027-04-20'"
+        },
+        "availability_rooms_left_check": {
+          "name": "availability_rooms_left_check",
+          "value": "\"availability\".\"rooms_left\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.bookings": {
+      "name": "bookings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "'BK-' || upper(substr(gen_random_uuid()::text, 1, 8))"
+        },
+        "group_id": {
+          "name": "group_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saved_option_id": {
+          "name": "saved_option_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "booked_by": {
+          "name": "booked_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hotel_id": {
+          "name": "hotel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_count": {
+          "name": "rooms_count",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_in": {
+          "name": "check_in",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_out": {
+          "name": "check_out",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nights": {
+          "name": "nights",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "members_count": {
+          "name": "members_count",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_inr": {
+          "name": "total_inr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "per_member_inr": {
+          "name": "per_member_inr",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bookings_group_id_groups_id_fk": {
+          "name": "bookings_group_id_groups_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "groups",
+          "columnsFrom": [
+            "group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bookings_saved_option_id_saved_options_id_fk": {
+          "name": "bookings_saved_option_id_saved_options_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "saved_options",
+          "columnsFrom": [
+            "saved_option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bookings_booked_by_travellers_id_fk": {
+          "name": "bookings_booked_by_travellers_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "travellers",
+          "columnsFrom": [
+            "booked_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bookings_hotel_id_hotels_hotel_id_fk": {
+          "name": "bookings_hotel_id_hotels_hotel_id_fk",
+          "tableFrom": "bookings",
+          "tableTo": "hotels",
+          "columnsFrom": [
+            "hotel_id"
+          ],
+          "columnsTo": [
+            "hotel_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bookings_room_hotel_fk": {
+          "name": "bookings_room_hotel_fk",
+          "tableFrom": "bookings",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "room_id",
+            "hotel_id"
+          ],
+          "columnsTo": [
+            "room_id",
+            "hotel_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bookings_group_id_unique": {
+          "name": "bookings_group_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "group_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "bookings_counts_check": {
+          "name": "bookings_counts_check",
+          "value": "\"bookings\".\"rooms_count\" > 0 AND \"bookings\".\"members_count\" > 0"
+        },
+        "bookings_nights_check": {
+          "name": "bookings_nights_check",
+          "value": "\"bookings\".\"nights\" = \"bookings\".\"check_out\" - \"bookings\".\"check_in\""
+        },
+        "bookings_total_check": {
+          "name": "bookings_total_check",
+          "value": "\"bookings\".\"total_inr\" > 0"
+        },
+        "bookings_split_check": {
+          "name": "bookings_split_check",
+          "value": "\"bookings\".\"per_member_inr\" = round(\"bookings\".\"total_inr\"::numeric / \"bookings\".\"members_count\", 2)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.departure_cities": {
+      "name": "departure_cities",
+      "schema": "",
+      "columns": {
+        "airport": {
+          "name": "airport",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "departure_cities_city_unique": {
+          "name": "departure_cities_city_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "city"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.destination_cities": {
+      "name": "destination_cities",
+      "schema": "",
+      "columns": {
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "airports": {
+          "name": "airports",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "destination_cities_country_code_destination_countries_code_fk": {
+          "name": "destination_cities_country_code_destination_countries_code_fk",
+          "tableFrom": "destination_cities",
+          "tableTo": "destination_countries",
+          "columnsFrom": [
+            "country_code"
+          ],
+          "columnsTo": [
+            "code"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.destination_countries": {
+      "name": "destination_countries",
+      "schema": "",
+      "columns": {
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.group_memberships": {
+      "name": "group_memberships",
+      "schema": "",
+      "columns": {
+        "group_id": {
+          "name": "group_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "traveller_id": {
+          "name": "traveller_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "search_id": {
+          "name": "search_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "requested_at": {
+          "name": "requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "decided_at": {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "memberships_approved_idx": {
+          "name": "memberships_approved_idx",
+          "columns": [
+            {
+              "expression": "group_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"group_memberships\".\"status\" = 'approved'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_pending_idx": {
+          "name": "memberships_pending_idx",
+          "columns": [
+            {
+              "expression": "group_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"group_memberships\".\"status\" = 'pending'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "memberships_traveller_idx": {
+          "name": "memberships_traveller_idx",
+          "columns": [
+            {
+              "expression": "traveller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "group_memberships_group_id_groups_id_fk": {
+          "name": "group_memberships_group_id_groups_id_fk",
+          "tableFrom": "group_memberships",
+          "tableTo": "groups",
+          "columnsFrom": [
+            "group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "group_memberships_traveller_id_travellers_id_fk": {
+          "name": "group_memberships_traveller_id_travellers_id_fk",
+          "tableFrom": "group_memberships",
+          "tableTo": "travellers",
+          "columnsFrom": [
+            "traveller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "group_memberships_search_id_searches_id_fk": {
+          "name": "group_memberships_search_id_searches_id_fk",
+          "tableFrom": "group_memberships",
+          "tableTo": "searches",
+          "columnsFrom": [
+            "search_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "group_memberships_group_id_traveller_id_pk": {
+          "name": "group_memberships_group_id_traveller_id_pk",
+          "columns": [
+            "group_id",
+            "traveller_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "memberships_status_check": {
+          "name": "memberships_status_check",
+          "value": "\"group_memberships\".\"status\" IN ('pending', 'approved', 'rejected')"
+        },
+        "memberships_decided_check": {
+          "name": "memberships_decided_check",
+          "value": "(\"group_memberships\".\"status\" = 'pending') = (\"group_memberships\".\"decided_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.groups": {
+      "name": "groups",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "'G-' || substr(gen_random_uuid()::text, 1, 8)"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner_id": {
+          "name": "owner_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_in": {
+          "name": "check_in",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_out": {
+          "name": "check_out",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_size": {
+          "name": "max_size",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "budget_inr": {
+          "name": "budget_inr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "itinerary": {
+          "name": "itinerary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "groups_city_dates_idx": {
+          "name": "groups_city_dates_idx",
+          "columns": [
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "check_in",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "check_out",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "groups_owner_idx": {
+          "name": "groups_owner_idx",
+          "columns": [
+            {
+              "expression": "owner_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "groups_owner_id_travellers_id_fk": {
+          "name": "groups_owner_id_travellers_id_fk",
+          "tableFrom": "groups",
+          "tableTo": "travellers",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "groups_city_destination_cities_name_fk": {
+          "name": "groups_city_destination_cities_name_fk",
+          "tableFrom": "groups",
+          "tableTo": "destination_cities",
+          "columnsFrom": [
+            "city"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "groups_name_check": {
+          "name": "groups_name_check",
+          "value": "length(trim(\"groups\".\"name\")) BETWEEN 1 AND 80"
+        },
+        "groups_max_size_check": {
+          "name": "groups_max_size_check",
+          "value": "\"groups\".\"max_size\" BETWEEN 2 AND 4"
+        },
+        "groups_budget_check": {
+          "name": "groups_budget_check",
+          "value": "\"groups\".\"budget_inr\" > 0"
+        },
+        "groups_dates_check": {
+          "name": "groups_dates_check",
+          "value": "\"groups\".\"check_in\" >= '2027-04-01' AND \"groups\".\"check_out\" <= '2027-04-20' AND \"groups\".\"check_out\" > \"groups\".\"check_in\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.hotels": {
+      "name": "hotels",
+      "schema": "",
+      "columns": {
+        "hotel_id": {
+          "name": "hotel_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aliases": {
+          "name": "aliases",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::text[]"
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "area": {
+          "name": "area",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lat": {
+          "name": "lat",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lng": {
+          "name": "lng",
+          "type": "numeric(9, 6)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rating": {
+          "name": "rating",
+          "type": "numeric(3, 1)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stars": {
+          "name": "stars",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_in_from": {
+          "name": "check_in_from",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_out_until": {
+          "name": "check_out_until",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "family_friendly": {
+          "name": "family_friendly",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "hotels_city_idx": {
+          "name": "hotels_city_idx",
+          "columns": [
+            {
+              "expression": "city",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "hotels_city_destination_cities_name_fk": {
+          "name": "hotels_city_destination_cities_name_fk",
+          "tableFrom": "hotels",
+          "tableTo": "destination_cities",
+          "columnsFrom": [
+            "city"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "hotels_rating_check": {
+          "name": "hotels_rating_check",
+          "value": "\"hotels\".\"rating\" BETWEEN 0 AND 10"
+        },
+        "hotels_stars_check": {
+          "name": "hotels_stars_check",
+          "value": "\"hotels\".\"stars\" BETWEEN 1 AND 5"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.interests": {
+      "name": "interests",
+      "schema": "",
+      "columns": {
+        "interest": {
+          "name": "interest",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rooms": {
+      "name": "rooms",
+      "schema": "",
+      "columns": {
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "hotel_id": {
+          "name": "hotel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "room_type": {
+          "name": "room_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_adults": {
+          "name": "max_adults",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_children": {
+          "name": "max_children",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_per_night_amount": {
+          "name": "price_per_night_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_per_night_currency": {
+          "name": "price_per_night_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'INR'"
+        },
+        "refundable": {
+          "name": "refundable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "rooms_hotel_idx": {
+          "name": "rooms_hotel_idx",
+          "columns": [
+            {
+              "expression": "hotel_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rooms_hotel_id_hotels_hotel_id_fk": {
+          "name": "rooms_hotel_id_hotels_hotel_id_fk",
+          "tableFrom": "rooms",
+          "tableTo": "hotels",
+          "columnsFrom": [
+            "hotel_id"
+          ],
+          "columnsTo": [
+            "hotel_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rooms_room_id_hotel_id_unique": {
+          "name": "rooms_room_id_hotel_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "room_id",
+            "hotel_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "rooms_max_adults_check": {
+          "name": "rooms_max_adults_check",
+          "value": "\"rooms\".\"max_adults\" > 0"
+        },
+        "rooms_max_children_check": {
+          "name": "rooms_max_children_check",
+          "value": "\"rooms\".\"max_children\" >= 0"
+        },
+        "rooms_price_check": {
+          "name": "rooms_price_check",
+          "value": "\"rooms\".\"price_per_night_amount\" > 0"
+        },
+        "rooms_currency_check": {
+          "name": "rooms_currency_check",
+          "value": "\"rooms\".\"price_per_night_currency\" = 'INR'"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.saved_options": {
+      "name": "saved_options",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "group_id": {
+          "name": "group_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "saved_by": {
+          "name": "saved_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hotel_id": {
+          "name": "hotel_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "room_id": {
+          "name": "room_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rooms_count": {
+          "name": "rooms_count",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nights": {
+          "name": "nights",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "members_count": {
+          "name": "members_count",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_inr": {
+          "name": "total_inr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "per_member_inr": {
+          "name": "per_member_inr",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "saved_options_group_idx": {
+          "name": "saved_options_group_idx",
+          "columns": [
+            {
+              "expression": "group_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "saved_options_group_id_groups_id_fk": {
+          "name": "saved_options_group_id_groups_id_fk",
+          "tableFrom": "saved_options",
+          "tableTo": "groups",
+          "columnsFrom": [
+            "group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "saved_options_saved_by_travellers_id_fk": {
+          "name": "saved_options_saved_by_travellers_id_fk",
+          "tableFrom": "saved_options",
+          "tableTo": "travellers",
+          "columnsFrom": [
+            "saved_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "saved_options_hotel_id_hotels_hotel_id_fk": {
+          "name": "saved_options_hotel_id_hotels_hotel_id_fk",
+          "tableFrom": "saved_options",
+          "tableTo": "hotels",
+          "columnsFrom": [
+            "hotel_id"
+          ],
+          "columnsTo": [
+            "hotel_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "saved_options_room_hotel_fk": {
+          "name": "saved_options_room_hotel_fk",
+          "tableFrom": "saved_options",
+          "tableTo": "rooms",
+          "columnsFrom": [
+            "room_id",
+            "hotel_id"
+          ],
+          "columnsTo": [
+            "room_id",
+            "hotel_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "saved_options_group_member_room_unique": {
+          "name": "saved_options_group_member_room_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "group_id",
+            "saved_by",
+            "room_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "saved_options_counts_check": {
+          "name": "saved_options_counts_check",
+          "value": "\"saved_options\".\"rooms_count\" > 0 AND \"saved_options\".\"nights\" > 0 AND \"saved_options\".\"members_count\" > 0"
+        },
+        "saved_options_cost_check": {
+          "name": "saved_options_cost_check",
+          "value": "\"saved_options\".\"total_inr\" > 0 AND \"saved_options\".\"per_member_inr\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.searches": {
+      "name": "searches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "traveller_id": {
+          "name": "traveller_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "home_city": {
+          "name": "home_city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_in": {
+          "name": "check_in",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "check_out": {
+          "name": "check_out",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "budget_inr": {
+          "name": "budget_inr",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interests": {
+          "name": "interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender_preference": {
+          "name": "gender_preference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "searches_traveller_idx": {
+          "name": "searches_traveller_idx",
+          "columns": [
+            {
+              "expression": "traveller_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "searches_traveller_id_travellers_id_fk": {
+          "name": "searches_traveller_id_travellers_id_fk",
+          "tableFrom": "searches",
+          "tableTo": "travellers",
+          "columnsFrom": [
+            "traveller_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "searches_home_city_departure_cities_city_fk": {
+          "name": "searches_home_city_departure_cities_city_fk",
+          "tableFrom": "searches",
+          "tableTo": "departure_cities",
+          "columnsFrom": [
+            "home_city"
+          ],
+          "columnsTo": [
+            "city"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "searches_city_destination_cities_name_fk": {
+          "name": "searches_city_destination_cities_name_fk",
+          "tableFrom": "searches",
+          "tableTo": "destination_cities",
+          "columnsFrom": [
+            "city"
+          ],
+          "columnsTo": [
+            "name"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "searches_budget_check": {
+          "name": "searches_budget_check",
+          "value": "\"searches\".\"budget_inr\" > 0"
+        },
+        "searches_interests_check": {
+          "name": "searches_interests_check",
+          "value": "cardinality(\"searches\".\"interests\") >= 1"
+        },
+        "searches_gender_check": {
+          "name": "searches_gender_check",
+          "value": "\"searches\".\"gender\" IN ('FEMALE', 'MALE')"
+        },
+        "searches_gender_preference_check": {
+          "name": "searches_gender_preference_check",
+          "value": "\"searches\".\"gender_preference\" IN ('ANY', 'SAME_GENDER')"
+        },
+        "searches_dates_check": {
+          "name": "searches_dates_check",
+          "value": "\"searches\".\"check_in\" >= '2027-04-01' AND \"searches\".\"check_out\" <= '2027-04-20' AND \"searches\".\"check_out\" > \"searches\".\"check_in\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.sessions": {
+      "name": "sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "sessions_user_idx": {
+          "name": "sessions_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sessions_user_id_users_id_fk": {
+          "name": "sessions_user_id_users_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.travellers": {
+      "name": "travellers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()::text"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "home_city": {
+          "name": "home_city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "home_airport": {
+          "name": "home_airport",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interests": {
+          "name": "interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender_preference": {
+          "name": "gender_preference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ANY'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "travellers_user_id_users_id_fk": {
+          "name": "travellers_user_id_users_id_fk",
+          "tableFrom": "travellers",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "travellers_home_city_departure_cities_city_fk": {
+          "name": "travellers_home_city_departure_cities_city_fk",
+          "tableFrom": "travellers",
+          "tableTo": "departure_cities",
+          "columnsFrom": [
+            "home_city"
+          ],
+          "columnsTo": [
+            "city"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "travellers_home_airport_departure_cities_airport_fk": {
+          "name": "travellers_home_airport_departure_cities_airport_fk",
+          "tableFrom": "travellers",
+          "tableTo": "departure_cities",
+          "columnsFrom": [
+            "home_airport"
+          ],
+          "columnsTo": [
+            "airport"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "travellers_user_id_unique": {
+          "name": "travellers_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "travellers_name_check": {
+          "name": "travellers_name_check",
+          "value": "length(trim(\"travellers\".\"name\")) BETWEEN 1 AND 60"
+        },
+        "travellers_age_check": {
+          "name": "travellers_age_check",
+          "value": "\"travellers\".\"age\" BETWEEN 18 AND 120"
+        },
+        "travellers_gender_check": {
+          "name": "travellers_gender_check",
+          "value": "\"travellers\".\"gender\" IN ('FEMALE', 'MALE')"
+        },
+        "travellers_interests_check": {
+          "name": "travellers_interests_check",
+          "value": "cardinality(\"travellers\".\"interests\") >= 1"
+        },
+        "travellers_gender_preference_check": {
+          "name": "travellers_gender_preference_check",
+          "value": "\"travellers\".\"gender_preference\" IN ('ANY', 'SAME_GENDER')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username_edit_count": {
+          "name": "username_edit_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        },
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
