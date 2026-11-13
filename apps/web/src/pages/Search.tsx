@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { GROUP_DATE_MAX, GROUP_DATE_MIN, searchRequestSchema, type CatalogResponse, type Search, type SearchRequest } from '@nomad/shared';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { GROUP_DATE_MAX, GROUP_DATE_MIN, searchRequestSchema, type CatalogResponse, type SearchRequest } from '@nomad/shared';
 import { Logo } from '../components/Logo';
 import { ApiError } from '../lib/api';
 import { useCatalog } from '../lib/useCatalog';
@@ -40,6 +40,7 @@ function groupByCategory(interests: CatalogResponse['interests']) {
 
 // M3: the seeker's search form. Prefilled from the saved profile; values only apply to this search.
 export function SearchPage() {
+  const navigate = useNavigate();
   const { data: profileData, isLoading: profileLoading } = useProfile();
   const { data: catalog, isLoading: catalogLoading, isError: catalogError } = useCatalog();
   const createSearch = useCreateSearch();
@@ -47,7 +48,6 @@ export function SearchPage() {
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [profileMissing, setProfileMissing] = useState(false);
-  const [saved, setSaved] = useState<Search | null>(null);
   const profile = profileData?.profile;
 
   useEffect(() => {
@@ -71,7 +71,6 @@ export function SearchPage() {
     setForm((current) => ({ ...current, [key]: value }));
     setFieldErrors((current) => ({ ...current, [key]: '' }));
     setError('');
-    setSaved(null);
   }
 
   function updateCheckIn(value: string) {
@@ -92,7 +91,6 @@ export function SearchPage() {
     event.preventDefault();
     setError('');
     setFieldErrors({});
-    setSaved(null);
     const parsed = searchRequestSchema.safeParse({ ...form, budgetInr: form.budgetInr === '' ? undefined : Number(form.budgetInr) });
     if (!parsed.success) {
       const next: Record<string, string> = {};
@@ -105,7 +103,7 @@ export function SearchPage() {
       return;
     }
     createSearch.mutate(parsed.data, {
-      onSuccess: (res) => setSaved(res.search),
+      onSuccess: (res) => navigate(`/search/${res.search.id}`),
       onError: (err) => {
         if (err instanceof ApiError && err.body.code === 'PROFILE_REQUIRED') return setProfileMissing(true);
         if (err instanceof ApiError && err.body.fields) setFieldErrors(err.body.fields);
@@ -135,7 +133,6 @@ export function SearchPage() {
           {(profileLoading || catalogLoading) && <p className="search-loading">Loading your profile…</p>}
           {catalogError && <p className="form-error" role="alert">Could not load cities and interests. Refresh to try again.</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
-          {saved && <p className="already-signed" role="status"><strong>Search saved.</strong> {saved.city}, {saved.checkIn} → {saved.checkOut}, ₹{saved.budgetInr.toLocaleString('en-IN')}. Matching groups arrive with M4.</p>}
           <div className="group-form-grid">
             <label>Home city <select value={form.homeCity} onChange={(event) => update('homeCity', event.target.value as typeof form.homeCity)}>{(catalog?.departureCities ?? []).map((c) => <option key={c.city} value={c.city}>{c.city} ({c.airport})</option>)}</select>{fieldErrors.homeCity && <small className="field-error">{fieldErrors.homeCity}</small>}</label>
             <label>Destination <select value={form.city} onChange={(event) => update('city', event.target.value as typeof form.city)}>{(catalog?.destinationCities ?? []).map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}</select>{fieldErrors.city && <small className="field-error">{fieldErrors.city}</small>}</label>
