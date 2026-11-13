@@ -4,18 +4,18 @@ This file is the contract between the frontend and the backend, and between team
 
 Status: **Built** = on main and working. **Planned** = agreed shape, not built yet.
 
-## Proposed choices (confirm before building)
+## Proposed choices
 
-These four defaults are used below. They are marked "proposed – confirm" where they appear.
+P1 and P3 were confirmed with M4 (D-013). P2 and P4 are still defaults, marked "proposed – confirm" where they appear.
 
 | # | Choice | Where it matters |
 | - | ------ | ---------------- |
-| P1 | The group owner is stored as an **approved** row in `group_memberships`. `membersCount` always includes the owner. | Group size rule, gender rule, `POST /api/groups` |
-| P2 | A join request carries the `searchId` it came from, and the server **re-checks all six rules** before saving it. | `POST /api/groups/:id/requests` |
-| P3 | Matches are ranked by most shared interests, then most shared nights, then smallest budget difference, then earliest check-in, then group id. | `POST /api/searches` |
-| P4 | **Any approved member** can book, once the group has **at least 2** approved members. | `POST /api/groups/:id/booking` |
+| P1 (confirmed) | The group owner is stored as an **approved** row in `group_memberships`. `membersCount` always includes the owner. | Group size rule, gender rule, `POST /api/groups` |
+| P2 (proposed) | A join request carries the `searchId` it came from, and the server **re-checks all six rules** before saving it. | `POST /api/groups/:id/requests` |
+| P3 (confirmed) | Matches are ranked by most shared interests, then most shared nights, then smallest budget difference, then earliest check-in, then group id. | `POST /api/searches` |
+| P4 (proposed) | **Any approved member** can book, once the group has **at least 2** approved members. | `POST /api/groups/:id/booking` |
 
-P1 needs one change to built code: `createGroup` must insert the owner's approved membership in the same transaction as the group (the seeded groups already have it).
+P1 is built: `createGroup` inserts the owner's approved membership in the same transaction as the group, and migration 0005 backfilled groups created before that.
 
 ## Conventions
 
@@ -75,11 +75,11 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 8 | GET /api/profile | yes | M1 | Built | – |
 | 9 | PUT /api/profile | yes | M1 | Built | – |
 | 10 | GET /api/catalog | no | M1 to M3 | Built | A |
-| 11 | POST /api/groups | traveller | M2 | Built (needs P1) | B |
+| 11 | POST /api/groups | traveller | M2 | Built | B |
 | 12 | GET /api/groups/mine | traveller | M2, M5 | Built (extend) | B |
 | 13 | GET /api/groups/:id | traveller | M2, M4, M6 | Planned | B |
-| 14 | POST /api/searches | traveller | M3, M4 | Built (M3: saves; matches in M4) | A |
-| 15 | GET /api/searches/:id/matches | traveller | M4 | Planned | A |
+| 14 | POST /api/searches | traveller | M3, M4 | Built | A |
+| 15 | GET /api/searches/:id/matches | traveller | M4 | Built | A |
 | 16 | POST /api/groups/:id/requests | traveller | M5 | Planned | B |
 | 17 | GET /api/groups/:id/requests | owner | M5 | Planned | B |
 | 18 | PATCH /api/groups/:id/requests/:travellerId | owner | M5 | Planned | B |
@@ -214,7 +214,7 @@ Response 200 `CatalogResponse`:
 
 The server reads the 4 reference tables once and caches them in memory. The search form takes its cities and interest labels from here.
 
-### 11. POST /api/groups (built, needs P1)
+### 11. POST /api/groups (built)
 
 - **Body** (`groupCreateRequestSchema`):
 
@@ -224,7 +224,7 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 
 - **Response 201** `GroupResponse`: `{ "group": Group }`.
 - **Errors:** 400 `VALIDATION_ERROR`, 401, 422 `PROFILE_REQUIRED`.
-- **Logic (proposed – confirm, P1):** in one transaction, insert the group and the owner's `group_memberships` row with `status 'approved'` and `decided_at now()`.
+- **Logic (P1):** in one transaction, insert the group and the owner's `group_memberships` row with `status 'approved'` and `decided_at now()`.
 
 ### 12. GET /api/groups/mine (built, extend)
 
@@ -256,9 +256,7 @@ The server reads the 4 reference tables once and caches them in memory. The sear
 - `members` lists every approved member, owner included (P1). Any signed-in traveller can read this, because seekers look at a group before they request to join.
 - **Errors:** 401, 404 `NOT_FOUND`, 422.
 
-### 14. POST /api/searches (built in M3, matches added in M4, lane A)
-
-M3 saves the search and returns `"matches": []`. M4 fills `matches` with the ranked results; the response shape does not change.
+### 14. POST /api/searches (built, lane A)
 
 - **Body** (`searchRequestSchema`):
 
@@ -298,9 +296,9 @@ M3 saves the search and returns `"matches": []`. M4 fills `matches` with the ran
   5. **Gender (D-009):** checked both ways against every approved member.
   6. **Not full:** `membersCount + 1 <= maxSize`.
 - **Also excluded:** booked groups, and any group where the caller already has a row.
-- **Ranking (proposed – confirm, P3):** `sharedInterests` count descending, `sharedNights` descending, `budgetDiffInr` ascending, `checkIn` ascending, `groupId` ascending.
+- **Ranking (P3):** `sharedInterests` count descending, `sharedNights` descending, `budgetDiffInr` ascending, `checkIn` ascending, `groupId` ascending.
 
-### 15. GET /api/searches/:id/matches (planned, lane A)
+### 15. GET /api/searches/:id/matches (built, lane A)
 
 - Response 200, same shape as endpoint 14. It runs the stored search again, so the results reflect groups that have filled or been booked since.
 - **Errors:** 401, 404 if the search belongs to another traveller, 422.

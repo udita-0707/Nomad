@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { desc, eq } from 'drizzle-orm';
 import type { Group, GroupCreateRequest, GroupResponse, GroupsResponse } from '@nomad/shared';
 import { db } from '../db/index.js';
-import { groups, travellers, type Group as GroupRow } from '../db/schema.js';
+import { groupMemberships, groups, travellers, type Group as GroupRow } from '../db/schema.js';
 import { AppError } from '../middleware/errorHandler.js';
 
 function toGroup(row: GroupRow): Group {
@@ -43,19 +43,27 @@ export async function getMyGroups(req: Request, res: Response) {
 export async function createGroup(req: Request, res: Response) {
   const ownerId = await ownerTravellerId(req.user!.id);
   const input = req.body as GroupCreateRequest;
-  const [row] = await db
-    .insert(groups)
-    .values({
-      ownerId,
-      name: input.name,
-      city: input.city,
-      checkIn: input.checkIn,
-      checkOut: input.checkOut,
-      maxSize: input.maxSize,
-      budgetInr: input.budgetInr,
-      itinerary: input.itinerary,
-    })
-    .returning();
+  // The owner is an approved member (P1, D-012), so member counts and the gender rule
+  // treat new groups the same as the seeded ones.
+  const row = await db.transaction(async (tx) => {
+    const [created] = await tx
+      .insert(groups)
+      .values({
+        ownerId,
+        name: input.name,
+        city: input.city,
+        checkIn: input.checkIn,
+        checkOut: input.checkOut,
+        maxSize: input.maxSize,
+        budgetInr: input.budgetInr,
+        itinerary: input.itinerary,
+      })
+      .returning();
+    await tx
+      .insert(groupMemberships)
+      .values({ groupId: created.id, travellerId: ownerId, status: 'approved', decidedAt: new Date() });
+    return created;
+  });
   const body: GroupResponse = { group: toGroup(row) };
   res.status(201).json(body);
 }
