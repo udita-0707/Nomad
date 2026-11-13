@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { signupRequestSchema, loginRequestSchema } from '@nomad/shared';
+import { signupRequestSchema, loginRequestSchema, updateUsernameRequestSchema } from '@nomad/shared';
 import { validateBody } from '../validation/validateBody.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
@@ -11,3 +11,4 @@ authRouter.post('/signup', validateBody(signupRequestSchema), asyncHandler(auth.
 authRouter.post('/login', validateBody(loginRequestSchema), asyncHandler(auth.login));
 authRouter.post('/logout', asyncHandler(auth.logout));
 authRouter.get('/me', requireAuth, asyncHandler(auth.me));
+authRouter.patch('/profile/username', requireAuth, validateBody(updateUsernameRequestSchema), asyncHandler(auth.updateUsername));

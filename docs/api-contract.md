@@ -34,6 +34,7 @@ Every error response:
   "id": "uuid",
   "email": "a@b.com",
   "username": "sunny-otter-0427",
+  "usernameEditCount": 0,
   "createdAt": "2026-11-13T07:00:00.000Z"
 }
 ```
@@ -47,6 +48,7 @@ Every error response:
 | POST   | /api/auth/login  | no     | `{ "email", "password" }`                       | 200 `{ "user" }` + sets cookie                                 |
 | POST   | /api/auth/logout | cookie | –                                               | 204, session deleted, cookie cleared                           |
 | GET    | /api/auth/me     | yes    | –                                               | 200 `{ "user" }`                                               |
+| PATCH  | /api/auth/profile/username | yes | `{ "username" }` | 200 `{ "user" }`; one edit allowed per account |
 | GET    | /api/dashboard   | yes    | –                                               | 200 `{ "user", "options": ["group_creator", "group_seeker"] }` |
 
 ## Usernames
