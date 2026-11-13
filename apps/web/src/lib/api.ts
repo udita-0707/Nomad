@@ -1,4 +1,5 @@
 import type {
+  CatalogResponse,
   DashboardResponse,
   ErrorResponse,
   HealthResponse,
@@ -9,6 +10,8 @@ import type {
   GroupCreateRequest,
   GroupResponse,
   GroupsResponse,
+  SearchRequest,
+  SearchResponse,
   UpdateUsernameRequest,
   UserResponse,
 } from '@nomad/shared';
@@ -52,4 +55,7 @@ export const api = {
   myGroups: () => request<GroupsResponse>('/groups/mine'),
   createGroup: (body: GroupCreateRequest) =>
     request<GroupResponse>('/groups', { method: 'POST', body: JSON.stringify(body) }),
+  getCatalog: () => request<CatalogResponse>('/catalog'),
+  createSearch: (body: SearchRequest) =>
+    request<SearchResponse>('/searches', { method: 'POST', body: JSON.stringify(body) }),
 };

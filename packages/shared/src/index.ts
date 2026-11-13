@@ -79,7 +79,7 @@ export const DESTINATION_CITIES = ['Tokyo', 'Kyoto', 'Osaka', 'Dubai', 'Abu Dhab
 export const GROUP_DATE_MIN = '2027-04-01';
 export const GROUP_DATE_MAX = '2027-04-20';
 
-const groupDateSchema = z
+export const groupDateSchema = z
   .string()
   .regex(/^2027-04-(0[1-9]|1[0-9]|20)$/, 'Choose a date from 1 to 20 April 2027');
 
@@ -107,6 +107,68 @@ export type Group = GroupCreateRequest & {
 };
 export type GroupResponse = { group: Group };
 export type GroupsResponse = { groups: Group[] };
+
+// ---------- Lane A: search (M3, M4) ----------
+
+export type InterestId = (typeof INTERESTS)[number]['id'];
+export type DestinationCity = (typeof DESTINATION_CITIES)[number];
+export type HomeCity = (typeof HOME_CITIES)[number];
+
+export const searchRequestSchema = z
+  .object({
+    homeCity: z.enum(HOME_CITIES),
+    city: z.enum(DESTINATION_CITIES),
+    checkIn: groupDateSchema,
+    checkOut: groupDateSchema,
+    interests: z
+      .array(z.enum(INTEREST_IDS))
+      .min(1, 'Pick at least one interest')
+      .refine((a) => new Set(a).size === a.length, 'Interests must not repeat'),
+    budgetInr: z
+      .number({ invalid_type_error: 'Enter your budget in INR' })
+      .int('Use a whole number of rupees')
+      .positive('Budget must be more than 0')
+      .max(10_000_000, 'Budget must be 1,00,00,000 or less'),
+    genderPreference: z.enum(GENDER_PREFERENCES),
+  })
+  .superRefine((value, ctx) => {
+    if (value.checkOut <= value.checkIn) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['checkOut'], message: 'Check-out must be after check-in' });
+    }
+  });
+export type SearchRequest = z.infer<typeof searchRequestSchema>;
+
+export type Search = SearchRequest & {
+  id: string;
+  gender: (typeof GENDERS)[number];
+  createdAt: string;
+};
+
+export type Match = {
+  groupId: string;
+  name: string;
+  city: DestinationCity;
+  checkIn: string;
+  checkOut: string;
+  membersCount: number;
+  maxSize: number;
+  ownerName: string;
+  sharedNights: number;
+  sharedInterests: InterestId[];
+  budgetInr: number;
+  budgetDiffInr: number;
+};
+
+/** POST /api/searches (201), GET /api/searches/:id/matches (200) */
+export type SearchResponse = { search: Search; matches: Match[] };
+
+/** GET /api/catalog */
+export type CatalogResponse = {
+  destinationCities: { name: DestinationCity; countryCode: string; timezone: string }[];
+  departureCities: { city: HomeCity; airport: string }[];
+  interests: { id: InterestId; label: string; category: string }[];
+  dateWindow: { from: string; to: string };
+};
 
 // ---------- Responses ----------
 
