@@ -1,8 +1,23 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from './errorHandler.js';
+import { SESSION_COOKIE, getValidSession } from '../services/session.js';
+import type { User } from '../db/schema.js';
 
-// TODO: read req.cookies[SESSION_COOKIE], look up the session with getSessionUser,
-// set res.locals.user and call next(). Otherwise throw 401 UNAUTHENTICATED.
-export function requireAuth(_req: Request, _res: Response, next: NextFunction) {
-  next(new AppError(401, 'UNAUTHENTICATED', 'Not signed in'));
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: User;
+  }
+}
+
+// Reads the session cookie, validates the session and attaches req.user.
+export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
+  try {
+    const sid = req.cookies?.[SESSION_COOKIE];
+    const user = sid ? await getValidSession(sid) : null;
+    if (!user) return next(new AppError(401, 'UNAUTHENTICATED', 'Not signed in'));
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
