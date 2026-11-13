@@ -53,6 +53,17 @@ npm run dev                 # API on :4000, web on :5173
 
 Open http://localhost:5173. Check the API with http://localhost:5173/api/health.
 
+## What we finished
+
+- M1: authentication, persistent sessions, traveller profile setup, and one-time username editing.
+- M2: group-owner posts with validated destinations, dates, capacity, budget, and itinerary.
+- M3: saved traveller searches using the catalog data.
+- M4: deterministic six-rule matching with ranked results.
+- M5: persistent join requests, owner approval/rejection, re-checks, and rejection blocking.
+- M6: approved-member group page, hotel comparison, server-side pricing, and shared mock booking state.
+- G1: URL-backed shared-interest and group-composition filters that narrow ranked matches.
+- G2: privacy-safe traveller profiles showing approved groups and shared interests.
+
 | Folder | What |
 |---|---|
 | `apps/web` | React + TypeScript + Vite frontend |
