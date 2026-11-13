@@ -106,7 +106,17 @@ export type Group = GroupCreateRequest & {
   createdAt: string;
 };
 export type GroupResponse = { group: Group };
-export type GroupsResponse = { groups: Group[] };
+/** A group plus its live counts (contract: GroupSummary). pendingCount is 0 unless the caller owns it. */
+export type GroupSummary = Group & {
+  ownerName: string;
+  nights: number;
+  membersCount: number;
+  pendingCount: number;
+  booked: boolean;
+};
+export type RequestedGroup = GroupSummary & { requestStatus: 'pending' | 'rejected' };
+/** GET /api/groups/mine: groups I own, groups I joined (approved, not owner), and my open or declined requests. */
+export type GroupsResponse = { groups: GroupSummary[]; joined: GroupSummary[]; requested: RequestedGroup[] };
 
 // ---------- Group requests / M5 ----------
 

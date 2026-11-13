@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { desc, eq } from 'drizzle-orm';
-import type { Group, GroupCreateRequest, GroupResponse, GroupsResponse } from '@nomad/shared';
+import { eq, sql } from 'drizzle-orm';
+import type { Group, GroupCreateRequest, GroupResponse, GroupsResponse, GroupSummary, RequestedGroup } from '@nomad/shared';
 import { db } from '../db/index.js';
 import { groupMemberships, groups, travellers, type Group as GroupRow } from '../db/schema.js';
 import { AppError } from '../middleware/errorHandler.js';
@@ -31,11 +31,46 @@ async function ownerTravellerId(userId: string): Promise<string> {
   return traveller.id;
 }
 
-// GET /api/groups/mine (requireAuth)
+type MineRow = {
+  id: string; owner_id: string; name: string; city: Group['city']; check_in: string; check_out: string;
+  max_size: number; budget_inr: number; itinerary: string; created_at: Date; owner_name: string;
+  nights: number; members_count: number; pending_count: number; booked: boolean;
+  my_status: 'pending' | 'approved' | 'rejected';
+};
+
+function toSummary(r: MineRow, isOwner: boolean): GroupSummary {
+  return {
+    id: r.id, ownerId: r.owner_id, name: r.name, city: r.city, checkIn: r.check_in, checkOut: r.check_out,
+    maxSize: r.max_size, budgetInr: r.budget_inr, itinerary: r.itinerary, createdAt: new Date(r.created_at).toISOString(),
+    ownerName: r.owner_name, nights: r.nights, membersCount: r.members_count,
+    pendingCount: isOwner ? r.pending_count : 0, booked: r.booked,
+  };
+}
+
+// GET /api/groups/mine (requireAuth). Every group the caller has a membership row in,
+// split by role: owned, joined (approved, not owner) and requested (pending or rejected).
 export async function getMyGroups(req: Request, res: Response) {
-  const ownerId = await ownerTravellerId(req.user!.id);
-  const rows = await db.select().from(groups).where(eq(groups.ownerId, ownerId)).orderBy(desc(groups.createdAt));
-  const body: GroupsResponse = { groups: rows.map(toGroup) };
+  const me = await ownerTravellerId(req.user!.id);
+  const { rows } = await db.execute<MineRow>(sql`
+    SELECT g.id, g.owner_id, g.name, g.city, to_char(g.check_in, 'YYYY-MM-DD') AS check_in,
+           to_char(g.check_out, 'YYYY-MM-DD') AS check_out, g.max_size, g.budget_inr, g.itinerary, g.created_at,
+           o.name AS owner_name, (g.check_out - g.check_in)::int AS nights,
+           (SELECT count(*)::int FROM group_memberships a WHERE a.group_id = g.id AND a.status = 'approved') AS members_count,
+           (SELECT count(*)::int FROM group_memberships p WHERE p.group_id = g.id AND p.status = 'pending') AS pending_count,
+           EXISTS (SELECT 1 FROM bookings b WHERE b.group_id = g.id) AS booked,
+           m.status AS my_status
+    FROM group_memberships m
+    JOIN groups g ON g.id = m.group_id
+    JOIN travellers o ON o.id = g.owner_id
+    WHERE m.traveller_id = ${me}
+    ORDER BY g.created_at DESC, g.id`);
+  const body: GroupsResponse = {
+    groups: rows.filter((r) => r.owner_id === me).map((r) => toSummary(r, true)),
+    joined: rows.filter((r) => r.owner_id !== me && r.my_status === 'approved').map((r) => toSummary(r, false)),
+    requested: rows
+      .filter((r) => r.owner_id !== me && r.my_status !== 'approved')
+      .map((r): RequestedGroup => ({ ...toSummary(r, false), requestStatus: r.my_status as RequestedGroup['requestStatus'] })),
+  };
   res.json(body);
 }
 
