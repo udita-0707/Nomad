@@ -15,6 +15,13 @@
       "when": 1794560169358,
       "tag": "0001_simple_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794560701769,
+      "tag": "0002_dusty_shooting_star",
+      "breakpoints": true
     }
   ]
 }

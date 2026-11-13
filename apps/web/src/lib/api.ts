@@ -3,6 +3,8 @@ import type {
   ErrorResponse,
   HealthResponse,
   LoginRequest,
+  ProfileInput,
+  ProfileResponse,
   SignupRequest,
   UpdateUsernameRequest,
   UserResponse,
@@ -41,4 +43,7 @@ export const api = {
   me: () => request<UserResponse>('/auth/me'),
   updateUsername: (body: UpdateUsernameRequest) => request<UserResponse>('/auth/profile/username', { method: 'PATCH', body: JSON.stringify(body) }),
   dashboard: () => request<DashboardResponse>('/dashboard'),
+  profile: () => request<ProfileResponse>('/profile'),
+  saveProfile: (body: ProfileInput) =>
+    request<ProfileResponse>('/profile', { method: 'PUT', body: JSON.stringify(body) }),
 };
