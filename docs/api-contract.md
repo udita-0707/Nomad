@@ -1,4 +1,4 @@
-# Nomad API contract (M1 to M6)
+# Nomad API contract (M1 to M6, S1)
 
 This file is the contract between the frontend and the backend, and between teammates building in parallel. Build to it exactly. To change a path, a field or a status code, edit this file first in its own small PR and say so in the team chat, then change the code. Types live in `packages/shared/src/index.ts` under the names given here; keep both in sync.
 
@@ -91,6 +91,8 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 23 | DELETE /api/groups/:id/saved-options/:optionId | member | M6 | Out of scope (D-014) | C |
 | 24 | POST /api/groups/:id/booking | member | M6 | Built (mock, D-016) | C |
 | 25 | GET /api/groups/:id/booking | member | M6 | Built (mock, D-016) | C |
+| 27 | GET /api/groups/:id/messages | member | S1 | Built | C |
+| 28 | POST /api/groups/:id/messages | member | S1 | Built | C |
 
 ## Shared objects
 
@@ -153,6 +155,14 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 ### TravellerProfileResponse (built)
 
 The traveller profile endpoint returns only safe public profile data. It never exposes gender, gender preference, user id, username, email, or pending/rejected memberships.
+
+### ChatMessage (built, S1)
+
+```json
+{ "id": 42, "author": { "id": "T-002", "name": "Priya" }, "body": "Shall we book the ryokan?\nIt has an onsen.", "createdAt": "2027-03-02T10:15:00.000Z", "mine": false }
+```
+
+`id` orders messages (higher is newer). `author.name` is the author's current profile name. `mine` is `true` when the caller wrote it. `body` is plain text with newlines kept.
 
 ## Endpoints
 
@@ -438,6 +448,26 @@ Response 204. Only the member who saved the option can delete it. Errors: 401, 4
 
 Response 200 `BookingResponse` = `{ "booking": Booking | null }`. Every approved member sees the same booking. `GET /api/groups/mine` also returns `bookedHotelName` on each `GroupSummary` for the dashboard badge. Errors: 401, 403, 404, 422.
 
+### 27. GET /api/groups/:id/messages (built, S1)
+
+Query: `before` (optional, positive integer message id). Without it, returns the newest page. With it, returns the newest page of this group's messages with `id < before`. Polling calls it without `before` every 4 seconds.
+
+Response 200 `ChatMessagesResponse` = `{ "messages": ChatMessage[], "hasMore": boolean }`. At most 50 messages (`CHAT_PAGE_SIZE`), **oldest first** within the page. `hasMore` is `true` when older messages exist below the page. A `before` id from another group only limits the id range; rows always come from this group.
+
+Errors: 400 `VALIDATION_ERROR` (`fields.before`: not a positive integer, or given twice), 401, 422 `PROFILE_REQUIRED`, 404 `NOT_FOUND`, 403 `FORBIDDEN` (pending, rejected or not a member), checked in that order.
+
+### 28. POST /api/groups/:id/messages (built, S1)
+
+Request `ChatMessageInput`:
+
+```json
+{ "body": "Hi everyone!" }
+```
+
+`body` has `\r\n` turned into `\n` and is trimmed, then must be 1 to 1000 characters (`CHAT_MAX_LENGTH`, counted like Postgres `length()`). Response 201 `ChatMessageResponse` = `{ "message": ChatMessage }` with `mine: true`. Messages are append-only: there is no edit or delete. Works before and after the group books.
+
+Errors: 400 `VALIDATION_ERROR` (`fields.body`: "Write a message", "Keep it to 1000 characters" or "Required"), 401, 422 `PROFILE_REQUIRED`, 404 `NOT_FOUND`, 403 `FORBIDDEN`.
+
 ## Ownership and parallel work
 
 Lanes are split so that each person owns separate files. Lane B (groups and requests) also covers the P1 fix.
@@ -446,7 +476,7 @@ Lanes are split so that each person owns separate files. Lane B (groups and requ
 | ---- | --------- | ---------------------- | -------------- |
 | A: search and matching | 10, 14, 15 | `routes/catalog.ts`, `routes/searches.ts`, `controllers/searchController.ts`, `services/matching.ts` | Search form, results |
 | B: groups and requests | 11 to 13, 16 to 19 | `routes/groups.ts`, `controllers/groupController.ts`, `controllers/requestController.ts` | Create group, my groups, group detail, pending requests badge |
-| C: Common Group Page | 20 to 25 | `routes/groupPage.ts` (mounted at `/api/groups/:id`, with `mergeParams`), `controllers/hotelController.ts`, `controllers/bookingController.ts`, `services/pricing.ts` | Group page, hotel list, saved options, book popup |
+| C: Common Group Page | 20 to 25, 27, 28 | `routes/groupPage.ts` (mounted at `/api/groups/:id`, with `mergeParams`), `controllers/hotelController.ts`, `controllers/bookingController.ts`, `controllers/chatController.ts`, `services/pricing.ts` | Group page, hotel list, saved options, book popup, group chat |
 
 Rules that keep merges clean:
 
