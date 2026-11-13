@@ -40,45 +40,35 @@ Read the FAQ at the end of `DATA_DICTIONARY.md` first. Then ask at the help desk
 
 ## Running Nomad (our app)
 
-Needs Node 20.12+ and Docker (for Postgres).
+You need Node 20.12+ and Docker.
 
 ```bash
 cp .env.example .env
 npm install
-docker compose up -d        # Postgres 16 on localhost:5432
-npm run db:migrate          # create all tables (M1 to M6, S1)
-npm run db:seed             # load the catalog and the 24 travellers and 12 groups
-npm run dev                 # API on :4000, web on :5173
+docker compose up -d
+npm run db:migrate
+npm run db:seed
+npm run dev
 ```
 
-Open http://localhost:5173. Check the API with http://localhost:5173/api/health.
+Before the first run, edit `.env`: Docker publishes Postgres on port **5440**, so set `DATABASE_URL=postgres://nomad:nomad@localhost:5440/nomad`, and set `PORT=4100`, which is where the Vite dev server sends `/api` calls.
 
-## What we finished
+Then open http://localhost:5173. http://localhost:5173/api/health should say the database is up.
 
-- M1: authentication, persistent sessions, traveller profile setup, and one-time username editing.
-- M2: group-owner posts with validated destinations, dates, capacity, budget, and itinerary.
-- M3: saved traveller searches using the catalog data.
-- M4: deterministic six-rule matching with ranked results.
-- M5: persistent join requests, owner approval/rejection, re-checks, and rejection blocking.
-- M6: approved-member group page, hotel comparison, server-side pricing, and shared mock booking state.
-- G1: URL-backed shared-interest and group-composition filters that narrow ranked matches.
-- G2: privacy-safe traveller profiles showing approved groups and shared interests.
+## What works
 
-| Folder | What |
-|---|---|
-| `apps/web` | React + TypeScript + Vite frontend |
-| `apps/api` | Express + TypeScript API, Drizzle ORM on Postgres |
-| `packages/shared` | Zod schemas and types used by both apps |
-| `docs/api-contract.md` | Request/response formats both teams build against |
-
-After changing `apps/api/src/db/schema.ts`, run `npm run db:generate` then `npm run db:migrate`.
-Other scripts: `npm run typecheck`, `npm run lint`, `npm run format`.
-
-## What we finished
-
-- M1 to M6: sign up and profile, create a group, search and ranked matches, join requests and approvals, and the common group page with hotel compare and a mock booking.
-- S1 group chat: approved members chat on the common group page, before and after booking. Messages are saved in Postgres and survive a refresh and a restart.
+- **M1** Sign up, sign in, and a traveller profile. Sessions are cookies stored in Postgres. You can change your username once.
+- **M2** Owners post a group: city, dates, size, budget and plan.
+- **M3, M4** Search for a trip and get matching groups ranked by shared interests, then shared nights, then budget.
+- **G1** Filter matches by interests and group make-up. Filters live in the URL.
+- **M5** Ask to join a group. The owner approves or declines, and both sides see the status.
+- **G2** Open a member's profile from a group to see their interests and groups. No gender or contact details are shown.
+- **M6** Members compare hotels for the group's city and dates, with the cost split per person, and book one. The booking is a mock: it's saved and every member sees it, but nothing is reserved.
+- **S1** Group chat on the group page, for members only, before and after booking.
 
 ## Known limitations
 
-- Chat refreshes every 4 seconds, no unread badge. There is no edit or delete, and no typing indicator.
+- Chat checks for new messages every 4 seconds. There's no unread badge, and messages can't be edited or deleted.
+- Bookings can't be cancelled, and booking doesn't reduce the rooms left.
+
+For how the code is laid out, see [docs/ENGINEERING.md](docs/ENGINEERING.md).
