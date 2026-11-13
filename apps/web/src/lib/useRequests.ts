@@ -8,7 +8,10 @@ export function useGroupRequests(groupId: string) {
 export function useRequestToJoin() {
   const queryClient = useQueryClient();
   return useMutation({ mutationFn: ({ groupId, searchId }: { groupId: string; searchId: string }) => api.requestToJoin(groupId, searchId),
-    onSuccess: (_data, variables) => queryClient.invalidateQueries({ queryKey: ['groups', variables.groupId, 'requests'] }) });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['groups', variables.groupId, 'requests'] });
+      queryClient.invalidateQueries({ queryKey: ['groups', 'mine'] });
+    } });
 }
 
 export function useDecideGroupRequest() {
@@ -19,4 +22,9 @@ export function useDecideGroupRequest() {
       queryClient.invalidateQueries({ queryKey: ['groups', 'mine'] });
       queryClient.invalidateQueries({ queryKey: ['searches'] });
     } });
+}
+
+// Owner view: everyone with a row in the group (owner, approved, pending, rejected), oldest first.
+export function useGroupRoster(groupId: string) {
+  return useQuery({ queryKey: ['groups', groupId, 'requests', 'all'], queryFn: () => api.getGroupRequests(groupId, 'all'), enabled: Boolean(groupId) });
 }
