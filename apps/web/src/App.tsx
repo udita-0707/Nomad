@@ -4,6 +4,7 @@ import { SignUp } from './pages/SignUp';
 import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
 import { ProfileSetup } from './pages/ProfileSetup';
+import { CreateGroup } from './pages/CreateGroup';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export function App() {
@@ -25,6 +26,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <ProfileSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/new"
+        element={
+          <ProtectedRoute>
+            <CreateGroup />
           </ProtectedRoute>
         }
       />
