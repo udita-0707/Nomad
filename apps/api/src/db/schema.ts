@@ -19,6 +19,7 @@ import {
   unique,
   check,
   index,
+  bigint,
 } from 'drizzle-orm/pg-core';
 
 // ============ Catalog (read-only) ============
@@ -364,6 +365,26 @@ export const bookings = pgTable(
   ],
 );
 
+// Group chat (S1): append-only messages from approved members. The id orders messages.
+export const groupMessages = pgTable(
+  'group_messages',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    groupId: text('group_id')
+      .notNull()
+      .references(() => groups.id, { onDelete: 'cascade' }),
+    authorId: text('author_id')
+      .notNull()
+      .references(() => travellers.id, { onDelete: 'cascade' }),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('group_messages_body_check', sql`length(trim(${t.body})) BETWEEN 1 AND 1000`),
+    index('group_messages_group_idx').on(t.groupId, t.id.desc()),
+  ],
+);
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type Traveller = typeof travellers.$inferSelect;
@@ -371,3 +392,4 @@ export type Group = typeof groups.$inferSelect;
 export type GroupMembership = typeof groupMemberships.$inferSelect;
 export type SavedOption = typeof savedOptions.$inferSelect;
 export type Booking = typeof bookings.$inferSelect;
+export type GroupMessage = typeof groupMessages.$inferSelect;

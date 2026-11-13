@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { HOTEL_SORTS, type Booking, type HotelOption, type HotelOptionsResponse, type HotelSearchFilters } from '@nomad/shared';
+import { GroupChat } from '../components/GroupChat';
 import { Logo } from '../components/Logo';
 import { ApiError } from '../lib/api';
 import { useBookGroup, useBooking, useGroupHotels } from '../lib/useGroupPage';
@@ -51,6 +52,7 @@ export function GroupPlanPage() {
         {data && (
           <>
             <PlanHeader context={data.context} />
+            <GroupChat key={id} groupId={id} />
             {booking ? (
               <BookedCard booking={booking} timeZone={data.context.timezone} />
             ) : (

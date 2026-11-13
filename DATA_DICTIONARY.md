@@ -241,6 +241,7 @@ The files are read-only. Your app keeps its own data in its own database. It mus
 | Join request | A seeker clicks "Interested" (M5) | Group, seeker, status (pending, approved, rejected) |
 | Saved hotel option | A member saves a hotel on the group page (M6) | Group, hotel, room type, rooms, total, per-member cost |
 | Group booking | A member confirms the booking (M6) | Group, hotel option, total, per-member cost, your own booking ID |
+| Group chat message (S1, table `group_messages`) | An approved member posts on the group page | Group, author, text (1 to 1000 characters), time. Append-only. |
 
 When the owner approves a join request, add the seeker to the group's members. The group then has one less free place.
 

@@ -46,7 +46,7 @@ Needs Node 20.12+ and Docker (for Postgres).
 cp .env.example .env
 npm install
 docker compose up -d        # Postgres 16 on localhost:5432
-npm run db:migrate          # create all tables (M1 to M6)
+npm run db:migrate          # create all tables (M1 to M6, S1)
 npm run db:seed             # load the catalog and the 24 travellers and 12 groups
 npm run dev                 # API on :4000, web on :5173
 ```
@@ -73,3 +73,12 @@ Open http://localhost:5173. Check the API with http://localhost:5173/api/health.
 
 After changing `apps/api/src/db/schema.ts`, run `npm run db:generate` then `npm run db:migrate`.
 Other scripts: `npm run typecheck`, `npm run lint`, `npm run format`.
+
+## What we finished
+
+- M1 to M6: sign up and profile, create a group, search and ranked matches, join requests and approvals, and the common group page with hotel compare and a mock booking.
+- S1 group chat: approved members chat on the common group page, before and after booking. Messages are saved in Postgres and survive a refresh and a restart.
+
+## Known limitations
+
+- Chat refreshes every 4 seconds, no unread badge. There is no edit or delete, and no typing indicator.

@@ -147,3 +147,11 @@ Entry format:
 - Why: backend remains the source of truth and the same 404 protects membership privacy.
 - Trade-off / revisit if: profiles do not expose gender or contact details; revisit only if the product explicitly adds a safe public field.
 - Files: packages/shared/src/index.ts, apps/api/src/{services/matching.ts,services/matchFilters.ts,controllers/searchController.ts,controllers/travellerController.ts,routes/searches.ts,routes/travellers.ts,app.ts}, apps/web/src/{pages/Matches.tsx,pages/TravellerProfile.tsx,pages/GroupMembers.tsx,lib/api.ts,lib/useSearch.ts,lib/useTravellerProfile.ts,App.tsx,styles.css}, docs/api-contract.md, README.md
+
+## D-018 | 2026-11-13 23:39 | S1 group chat with polling on one new table
+- Context: S1 asks for chat on the common group page that survives a refresh and a restart. No table could hold it (CHANGE: first schema change since 0005).
+- Decision: new table group_messages (migration 0006, identity id orders messages, no trigger) and two member-only endpoints, GET/POST /api/groups/:id/messages (assertMember: 422, 404, 403). The page polls the newest 50 every 4s with React Query (paused in a hidden tab, stops on 4xx) and merges by id; "Load earlier" pages with ?before=. Append-only plain text, 1 to 1000 characters, rendered as text. Chat stays open after booking.
+- Rejected: websockets/SSE (new library or long-lived connections), an after-cursor (ids become visible at commit, so a late commit could be skipped), reusing an existing table (none fits), read receipts or unread badge (second schema change).
+- Why: smallest change that works for 2 to 4 people, no new library, and the server keeps every rule.
+- Trade-off / revisit if: up to 4s delay and no unread badge; revisit if more than about 50 messages arrive in 4 seconds, or the demo needs instant delivery.
+- Files: apps/api/src/db/schema.ts, apps/api/drizzle/0006_group_messages.sql, packages/shared/src/index.ts, apps/api/src/{controllers/chatController.ts,routes/groupPage.ts}, apps/web/src/{lib/api.ts,lib/useGroupChat.ts,components/GroupChat.tsx,pages/GroupPlan.tsx,styles.css}, docs/api-contract.md, DATA_DICTIONARY.md, README.md
