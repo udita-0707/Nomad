@@ -1,9 +1,11 @@
 import { Link, Navigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import type { CatalogResponse, Match, Search } from '@nomad/shared';
 import { Logo } from '../components/Logo';
 import { ApiError } from '../lib/api';
 import { useCatalog } from '../lib/useCatalog';
 import { useSearchMatches } from '../lib/useSearch';
+import { useRequestToJoin } from '../lib/useRequests';
 import { PROFILE_NEEDED_NOTICE } from './Search';
 
 const DAY_MS = 86_400_000;
@@ -50,7 +52,7 @@ export function MatchesPage() {
             {data.matches.length === 0 ? (
               <EmptyState title="No groups match yet" text="Try widening your dates, adding a few more interests, or adjusting your budget." action="Edit search" />
             ) : (
-              <div className="match-list">{data.matches.map((match) => <MatchCard key={match.groupId} match={match} timeZone={timeZone} labels={labels} />)}</div>
+              <div className="match-list">{data.matches.map((match) => <MatchCard key={match.groupId} match={match} searchId={data.search.id} timeZone={timeZone} labels={labels} />)}</div>
             )}
           </>
         )}
@@ -77,9 +79,17 @@ function SearchSummary({ search, count, timeZone }: { search: Search; count: num
   );
 }
 
-function MatchCard({ match, timeZone, labels }: { match: Match; timeZone?: string; labels: Map<string, CatalogResponse['interests'][number]['label']> }) {
+function MatchCard({ match, searchId, timeZone, labels }: { match: Match; searchId: string; timeZone?: string; labels: Map<string, CatalogResponse['interests'][number]['label']> }) {
+  const request = useRequestToJoin();
+  const [state, setState] = useState<'idle' | 'pending' | 'approved' | 'rejected'>('idle');
+  const [error, setError] = useState('');
   const shared = match.sharedInterests.map((id) => labels.get(id) ?? id).join(', ');
   const fill = Math.min(100, Math.round((match.membersCount / match.maxSize) * 100));
+  async function sendRequest() {
+    setError('');
+    try { await request.mutateAsync({ groupId: match.groupId, searchId }); setState('pending'); }
+    catch (err) { setError(err instanceof ApiError ? err.body.message : 'Could not send the request.'); }
+  }
   return (
     <article className="match-result">
       <div className="match-result-main">
@@ -93,7 +103,8 @@ function MatchCard({ match, timeZone, labels }: { match: Match; timeZone?: strin
           <span>{match.membersCount}/{match.maxSize} travellers</span>
           <div className="capacity-bar" role="progressbar" aria-valuemin={0} aria-valuemax={match.maxSize} aria-valuenow={match.membersCount}><i style={{ width: `${fill}%` }} /></div>
         </div>
-        <span className="tooltip-wrap" title="Coming in M5"><button className="button button-small" type="button" disabled aria-describedby={`m5-${match.groupId}`}>Request to join</button><small id={`m5-${match.groupId}`} className="tooltip">Coming in M5</small></span>
+        <button className="button button-small" type="button" onClick={sendRequest} disabled={request.isPending || state !== 'idle'}>{request.isPending ? 'Sending…' : state === 'pending' ? 'Request pending' : state === 'approved' ? 'Joined' : state === 'rejected' ? 'Request declined' : 'Request to join'}</button>
+        {error && <small className="request-error" role="alert">{error}</small>}
       </div>
     </article>
   );
