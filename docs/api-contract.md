@@ -74,11 +74,11 @@ Add each planned code to the `ErrorCode` union when you build the endpoint that 
 | 7 | GET /api/dashboard | yes | M1 | Built | – |
 | 8 | GET /api/profile | yes | M1 | Built | – |
 | 9 | PUT /api/profile | yes | M1 | Built | – |
-| 10 | GET /api/catalog | no | M1 to M3 | Planned | A |
+| 10 | GET /api/catalog | no | M1 to M3 | Built | A |
 | 11 | POST /api/groups | traveller | M2 | Built (needs P1) | B |
 | 12 | GET /api/groups/mine | traveller | M2, M5 | Built (extend) | B |
 | 13 | GET /api/groups/:id | traveller | M2, M4, M6 | Planned | B |
-| 14 | POST /api/searches | traveller | M3, M4 | Planned | A |
+| 14 | POST /api/searches | traveller | M3, M4 | Built (M3: saves; matches in M4) | A |
 | 15 | GET /api/searches/:id/matches | traveller | M4 | Planned | A |
 | 16 | POST /api/groups/:id/requests | traveller | M5 | Planned | B |
 | 17 | GET /api/groups/:id/requests | owner | M5 | Planned | B |
@@ -199,7 +199,7 @@ Response 200 `ProfileResponse`: `{ "profile": Profile | null }`. It is `null` un
 - **Errors:** 400, 401.
 - Planned, and additive: an optional `age` (an integer from 18 to 120). The server sets `home_airport` from `homeCity` (Bengaluru BLR, Chennai MAA, Delhi DEL, Mumbai BOM).
 
-### 10. GET /api/catalog (planned, lane A)
+### 10. GET /api/catalog (built, lane A)
 
 Response 200 `CatalogResponse`:
 
@@ -212,7 +212,7 @@ Response 200 `CatalogResponse`:
 }
 ```
 
-The server reads the 4 reference tables and caches them in memory. Until this ships, the frontend keeps using the constants in `@nomad/shared`, which hold the same values.
+The server reads the 4 reference tables once and caches them in memory. The search form takes its cities and interest labels from here.
 
 ### 11. POST /api/groups (built, needs P1)
 
@@ -256,7 +256,9 @@ The server reads the 4 reference tables and caches them in memory. Until this sh
 - `members` lists every approved member, owner included (P1). Any signed-in traveller can read this, because seekers look at a group before they request to join.
 - **Errors:** 401, 404 `NOT_FOUND`, 422.
 
-### 14. POST /api/searches (planned, lane A)
+### 14. POST /api/searches (built in M3, matches added in M4, lane A)
+
+M3 saves the search and returns `"matches": []`. M4 fills `matches` with the ranked results; the response shape does not change.
 
 - **Body** (`searchRequestSchema`):
 

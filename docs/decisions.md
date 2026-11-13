@@ -99,3 +99,11 @@ Entry format:
 - Why: correctness on judge requests matters most, so every rule is enforced where the state changes.
 - Trade-off / revisit if: more endpoints than a minimal demo needs; drop 19 and 23 if time runs short.
 - Files: docs/decisions.md
+
+## D-012 | 2026-11-13 18:43 | M3 search form and saved searches, separate from M4
+- Context: Aman wants M3 and M4 on separate branches; M3 is the seeker's form inside the data's cities and dates, M4 is the match list.
+- Decision: M3 builds GET /api/catalog and POST /api/searches, which validates, takes gender from the profile, saves the search and returns matches as an empty list; the /search form is prefilled from the profile and shows a saved confirmation. M4 adds matching, the matches endpoint and page on a branch stacked on M3, with the same response shape.
+- Rejected: a separate GET /api/searches/:id for M3 (extra endpoint not in the contract), a gender field on the form (not in M3's criteria), hard-coded city lists in the form (the catalog endpoint is the source).
+- Why: each milestone can be reviewed and merged on its own without changing the contract.
+- Trade-off / revisit if: on the M3 branch alone a search shows no groups; merge M4 right after M3.
+- Files: packages/shared/src/index.ts, apps/api/src/controllers/{catalogController,searchController}.ts, apps/api/src/routes/{catalog,searches}.ts, apps/api/src/app.ts, apps/web/src/lib/{api,useCatalog,useSearch}.ts, apps/web/src/pages/{Search,Dashboard,ProfileSetup}.tsx, apps/web/src/App.tsx, apps/web/src/styles.css, docs/api-contract.md
