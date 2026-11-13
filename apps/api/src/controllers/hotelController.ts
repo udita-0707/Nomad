@@ -9,7 +9,7 @@ import { hotelOptions } from '../services/pricing.js';
 const DAY_MS = 86_400_000;
 
 // GET /api/groups/:id/hotels (member). Searches the group's own city and dates.
-// Nothing is saved: booking in M6 is a confirm popup only (D-014).
+// Booking is separate: see bookingController.ts (D-016).
 export async function getGroupHotels(req: Request, res: Response) {
   const { group, membersCount } = await assertMember(req.params.id, req.user!.id);
   const filters = req.query as unknown as HotelSearchQuery;
