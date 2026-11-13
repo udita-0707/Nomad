@@ -6,6 +6,7 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   username: text('username').notNull().unique(),
+  usernameEditCount: integer('username_edit_count').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -17,9 +18,8 @@ export const sessions = pgTable('sessions', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 });
 
-// A traveller profile (M1). Seeded travellers from data/problem-3 have ids like
-// "T-001" and no user; signed-up users get a generated id and their user_id.
-// Allowed values are checked by Zod in @nomad/shared.
+// A traveller profile (M1). Seeded travellers can exist without a user;
+// signed-up users get a generated id linked through user_id.
 export const travellers = pgTable('travellers', {
   id: text('id')
     .primaryKey()

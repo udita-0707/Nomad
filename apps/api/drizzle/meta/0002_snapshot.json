@@ -1,9 +1,80 @@
 {
-  "id": "16a9cf5f-8e19-4ac9-83eb-5e70423a74e4",
-  "prevId": "bd15b2c4-eef2-4c68-af1e-546d148230b8",
+  "id": "b698f791-d68d-4c14-a584-94f55fd772d8",
+  "prevId": "0dccf4b9-7604-4f81-867b-0bc9195a268b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.profiles": {
+      "name": "profiles",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "home_city": {
+          "name": "home_city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "interests": {
+          "name": "interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender_preference": {
+          "name": "gender_preference",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ANY'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profiles_user_id_users_id_fk": {
+          "name": "profiles_user_id_users_id_fk",
+          "tableFrom": "profiles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.sessions": {
       "name": "sessions",
       "schema": "",
@@ -49,97 +120,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.travellers": {
-      "name": "travellers",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "age": {
-          "name": "age",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "gender": {
-          "name": "gender",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "home_city": {
-          "name": "home_city",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "interests": {
-          "name": "interests",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gender_preference": {
-          "name": "gender_preference",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'ANY'"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "travellers_user_id_users_id_fk": {
-          "name": "travellers_user_id_users_id_fk",
-          "tableFrom": "travellers",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "travellers_user_id_unique": {
-          "name": "travellers_user_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "user_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -168,6 +148,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "username_edit_count": {
+          "name": "username_edit_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",

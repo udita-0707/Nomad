@@ -8,6 +8,14 @@ import { z } from 'zod';
 // TODO: agree on final password rules with the team.
 export const signupRequestSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
+  username: z
+    .string()
+    .trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(24, 'Username must be 24 characters or fewer')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Use only letters, numbers, hyphens, or underscores')
+    .optional()
+    .or(z.literal('')),
   password: z.string().min(8).max(72), // bcrypt only uses the first 72 bytes
 });
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
@@ -18,9 +26,18 @@ export const loginRequestSchema = z.object({
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
-// ---------- Profile (M1) ----------
+export const updateUsernameRequestSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, 'Username must be at least 3 characters')
+    .max(24, 'Username must be 24 characters or fewer')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Use only letters, numbers, hyphens, or underscores'),
+});
+export type UpdateUsernameRequest = z.infer<typeof updateUsernameRequestSchema>;
 
-// Values match data/problem-3 so seeded travellers and new users can be matched together.
+// ---------- Traveller profile ----------
+
 export const GENDERS = ['FEMALE', 'MALE'] as const;
 export const GENDER_PREFERENCES = ['ANY', 'SAME_GENDER'] as const;
 export const HOME_CITIES = ['Bengaluru', 'Chennai', 'Delhi', 'Mumbai'] as const;
@@ -42,28 +59,18 @@ export const INTERESTS = [
   { id: 'BUDGET_STAYS', label: 'Budget stays' },
   { id: 'LUXURY', label: 'Luxury' },
 ] as const;
-const INTEREST_IDS = INTERESTS.map((i) => i.id) as [
-  (typeof INTERESTS)[number]['id'],
-  ...(typeof INTERESTS)[number]['id'][],
-];
+const INTEREST_IDS = INTERESTS.map((i) => i.id) as [(typeof INTERESTS)[number]['id'], ...(typeof INTERESTS)[number]['id'][]];
 
-/** PUT /api/profile */
 export const profileRequestSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(60),
   gender: z.enum(GENDERS),
   homeCity: z.enum(HOME_CITIES),
-  interests: z
-    .array(z.enum(INTEREST_IDS))
-    .min(1, 'Pick at least one interest')
-    .refine((a) => new Set(a).size === a.length, 'Interests must not repeat'),
+  interests: z.array(z.enum(INTEREST_IDS)).min(1, 'Pick at least one interest').refine((a) => new Set(a).size === a.length, 'Interests must not repeat'),
   genderPreference: z.enum(GENDER_PREFERENCES).default('ANY'),
 });
 export type ProfileRequest = z.infer<typeof profileRequestSchema>;
 export type ProfileInput = z.input<typeof profileRequestSchema>;
-
 export type Profile = ProfileRequest & { updatedAt: string };
-
-/** GET /api/profile (profile is null until the user saves it), PUT /api/profile */
 export type ProfileResponse = { profile: Profile | null };
 
 // ---------- Responses ----------
@@ -72,6 +79,7 @@ export const publicUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   username: z.string(),
+  usernameEditCount: z.number().int().min(0).max(1),
   createdAt: z.string(),
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
@@ -91,6 +99,8 @@ export type HealthResponse = { status: 'ok'; db: 'up' | 'down' };
 export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'EMAIL_TAKEN'
+  | 'USERNAME_TAKEN'
+  | 'USERNAME_UPDATE_LIMIT_REACHED'
   | 'INVALID_CREDENTIALS'
   | 'UNAUTHENTICATED'
   | 'NOT_FOUND'

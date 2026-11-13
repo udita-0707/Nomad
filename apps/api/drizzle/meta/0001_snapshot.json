@@ -1,80 +1,9 @@
 {
-  "id": "bd15b2c4-eef2-4c68-af1e-546d148230b8",
+  "id": "0dccf4b9-7604-4f81-867b-0bc9195a268b",
   "prevId": "629aece1-3494-4a30-8683-a95ecb9a0afd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.profiles": {
-      "name": "profiles",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gender": {
-          "name": "gender",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "home_city": {
-          "name": "home_city",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "interests": {
-          "name": "interests",
-          "type": "text[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gender_preference": {
-          "name": "gender_preference",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'ANY'"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "profiles_user_id_users_id_fk": {
-          "name": "profiles_user_id_users_id_fk",
-          "tableFrom": "profiles",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.sessions": {
       "name": "sessions",
       "schema": "",
@@ -148,6 +77,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "username_edit_count": {
+          "name": "username_edit_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",

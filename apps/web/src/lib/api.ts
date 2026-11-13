@@ -6,6 +6,7 @@ import type {
   ProfileInput,
   ProfileResponse,
   SignupRequest,
+  UpdateUsernameRequest,
   UserResponse,
 } from '@nomad/shared';
 
@@ -40,6 +41,7 @@ export const api = {
     request<UserResponse>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   logout: () => request<void>('/auth/logout', { method: 'POST' }),
   me: () => request<UserResponse>('/auth/me'),
+  updateUsername: (body: UpdateUsernameRequest) => request<UserResponse>('/auth/profile/username', { method: 'PATCH', body: JSON.stringify(body) }),
   dashboard: () => request<DashboardResponse>('/dashboard'),
   profile: () => request<ProfileResponse>('/profile'),
   saveProfile: (body: ProfileInput) =>
