@@ -42,7 +42,7 @@ async function startSession(res: Response, userId: string) {
 
 // POST /api/auth/signup
 export async function signup(req: Request, res: Response) {
-  const { email, password } = req.body as SignupRequest;
+  const { email, password, username: requestedUsername } = req.body as SignupRequest;
 
   const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
   if (existing) throw new AppError(409, 'EMAIL_TAKEN', 'An account with this email already exists');
@@ -50,15 +50,20 @@ export async function signup(req: Request, res: Response) {
   const passwordHash = await hashPassword(password);
 
   let user: User | undefined;
-  for (let attempt = 0; attempt < MAX_USERNAME_ATTEMPTS && !user; attempt++) {
+  const username = requestedUsername?.trim() || undefined;
+  const attempts = username ? 1 : MAX_USERNAME_ATTEMPTS;
+  for (let attempt = 0; attempt < attempts && !user; attempt++) {
     try {
       [user] = await db
         .insert(users)
-        .values({ email, passwordHash, username: randomUsername() })
+        .values({ email, passwordHash, username: username ?? randomUsername() })
         .returning();
     } catch (err) {
       if (isUniqueViolation(err, 'users_email_unique')) {
         throw new AppError(409, 'EMAIL_TAKEN', 'An account with this email already exists');
+      }
+      if (isUniqueViolation(err, 'users_username_unique') && username) {
+        throw new AppError(409, 'USERNAME_TAKEN', 'That username is already taken');
       }
       if (!isUniqueViolation(err, 'users_username_unique')) throw err;
       // Username taken: try another one.
