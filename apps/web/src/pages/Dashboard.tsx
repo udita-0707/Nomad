@@ -16,8 +16,9 @@ export function Dashboard() {
 
   async function signOut() {
     await api.logout().catch(() => undefined);
-    await queryClient.invalidateQueries({ queryKey: ['me'] });
-    await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.removeQueries({ queryKey: ['me'] });
+    queryClient.removeQueries({ queryKey: ['dashboard'] });
+    queryClient.removeQueries({ queryKey: ['groups'] });
     navigate('/');
   }
 
