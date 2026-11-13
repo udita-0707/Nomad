@@ -383,7 +383,7 @@ export const chatMessageInputSchema = z.object({
 export type ChatMessageInput = z.infer<typeof chatMessageInputSchema>;
 
 export const chatHistoryQuerySchema = z.object({
-  before: z.coerce.number().int().positive('Invalid cursor').optional(),
+  before: z.coerce.number({ invalid_type_error: 'Invalid cursor' }).int('Invalid cursor').positive('Invalid cursor').optional(),
 });
 
 export type ChatMessage = {
