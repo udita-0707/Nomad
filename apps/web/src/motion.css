@@ -1,0 +1,113 @@
+/* Nomad motion layer. Rules: docs/frontend-design-prompt.md.
+   Only transform and opacity animate. Every entrance shows its end state under reduced motion. */
+:root{
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --ease-in:cubic-bezier(.4,0,1,1);
+  --ease-in-out:cubic-bezier(.65,0,.35,1);
+  --dur-micro:120ms;
+  --dur-short:220ms;
+  --dur-long:420ms;
+  --stagger-row:40ms;
+  --stagger-block:80ms;
+  --focus-ring:#e3522e;
+}
+html,body{overflow-x:clip}
+
+/* Focus appears instantly and never animates. */
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px;transition:none}
+
+/* ---------- Shared entrances ---------- */
+@keyframes nm-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes nm-rise-sm{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes nm-fade{from{opacity:0}to{opacity:1}}
+@keyframes nm-drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes nm-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes nm-stamp{0%{opacity:0;transform:scale(1.25)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes nm-slide-l{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes nm-slide-r{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes nm-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes nm-orbit{from{rotate:0deg}to{rotate:360deg}}
+@keyframes nm-marquee{to{transform:translateX(-50%)}}
+
+/* Blocks: an intro column, then its form card. */
+.profile-setup-intro,.group-create-intro,.profile-form,.group-form,.welcome-card,.matches-header,.profile-hero{animation:nm-rise var(--dur-long) var(--ease-out) both}
+.profile-form,.group-form{animation-delay:var(--stagger-block)}
+
+/* Form fields fade up in order, once. */
+.auth-content>*,.auth-form>*,.profile-form>*,.group-form>*{animation:nm-rise-sm var(--dur-long) var(--ease-out) both}
+.auth-content>:nth-child(2),.auth-form>:nth-child(1){animation-delay:40ms}
+.auth-content>:nth-child(3),.auth-form>:nth-child(2){animation-delay:80ms}
+.auth-content>:nth-child(4),.auth-form>:nth-child(3){animation-delay:120ms}
+.auth-content>:nth-child(5),.auth-form>:nth-child(4){animation-delay:160ms}
+.auth-content>:nth-child(6),.auth-form>:nth-child(5){animation-delay:200ms}
+.auth-content>:nth-child(n+7),.auth-form>:nth-child(n+6){animation-delay:240ms}
+.profile-form>:nth-child(2),.group-form>:nth-child(2){animation-delay:120ms}
+.profile-form>:nth-child(3),.group-form>:nth-child(3){animation-delay:160ms}
+.profile-form>:nth-child(4),.group-form>:nth-child(4){animation-delay:200ms}
+.profile-form>:nth-child(5),.group-form>:nth-child(5){animation-delay:240ms}
+.profile-form>:nth-child(6),.group-form>:nth-child(6){animation-delay:280ms}
+.profile-form>:nth-child(7),.group-form>:nth-child(7){animation-delay:320ms}
+.profile-form>:nth-child(n+8),.group-form>:nth-child(n+8){animation-delay:360ms}
+
+/* Errors slide down into place; no shake. */
+.form-error,.field-error,.username-error,.request-error{animation:nm-drop var(--dur-short) var(--ease-out) both}
+
+/* Lists: rows arrive 40ms apart, at most ~500ms in all. */
+.group-list>*,.member-list>*,.hotel-result,.demo-accounts li,.overview-grid>*,.request-row,.selected-interest-list>*{animation:nm-rise-sm var(--dur-long) var(--ease-out) both}
+.group-list>:nth-child(2),.member-list>:nth-child(2),.hotel-result:nth-child(2),.demo-accounts li:nth-child(2),.overview-grid>:nth-child(2){animation-delay:60ms}
+.group-list>:nth-child(3),.member-list>:nth-child(3),.hotel-result:nth-child(3),.demo-accounts li:nth-child(3),.overview-grid>:nth-child(3){animation-delay:120ms}
+.group-list>:nth-child(4),.member-list>:nth-child(4),.hotel-result:nth-child(4),.demo-accounts li:nth-child(4){animation-delay:180ms}
+.group-list>:nth-child(5),.member-list>:nth-child(5),.hotel-result:nth-child(5),.demo-accounts li:nth-child(5){animation-delay:240ms}
+.group-list>:nth-child(n+6),.member-list>:nth-child(n+6),.hotel-result:nth-child(n+6),.demo-accounts li:nth-child(n+6){animation-delay:300ms}
+.overview-grid>*{animation-delay:calc(var(--stagger-block) + 0ms)}
+.overview-grid>:nth-child(2){animation-delay:calc(var(--stagger-block) + 60ms)}
+.overview-grid>:nth-child(3){animation-delay:calc(var(--stagger-block) + 120ms)}
+
+/* Hover lift on cards that are links: one signal, transform only. */
+.group-create-link,.feature-grid article,.hotel-result,.group-list-card{transition:transform var(--dur-short) var(--ease-out),box-shadow var(--dur-short) var(--ease-out)}
+.feature-grid article:hover,.hotel-result:hover,.group-list-card:hover{transform:translateY(-2px)}
+
+/* Buttons: a press, and a hover that only moves. */
+.button,.chip,.interest-option,.gender-filter button,.demo-account,.nav-item{transition:transform var(--dur-micro) var(--ease-out),background-color var(--dur-micro) var(--ease-out),border-color var(--dur-micro) var(--ease-out),color var(--dur-micro) var(--ease-out)}
+.button:active:not(:disabled),.chip:active,.interest-option:active,.gender-filter button:active,.demo-account:active{transform:scale(.97)}
+
+/* ---------- Landing ---------- */
+.ticker-track{display:flex;width:max-content;animation:nm-marquee 38s linear infinite}
+.ticker-track .ticker-inner{justify-content:flex-start;gap:56px;padding-right:56px;min-width:0}
+.ticker:hover .ticker-track,.ticker:focus-within .ticker-track{animation-play-state:paused}
+.feature-grid article{will-change:auto}
+
+/* ---------- Auth art panel ---------- */
+.auth-quote>*{animation:nm-rise var(--dur-long) var(--ease-out) both}
+.auth-quote>:nth-child(2){animation-delay:var(--stagger-block)}
+.auth-quote>:nth-child(3){animation-delay:calc(var(--stagger-block) * 3)}
+.auth-art-footer{animation:nm-fade 600ms var(--ease-out) 400ms both}
+
+/* ---------- Dashboard ---------- */
+.nav-item{position:relative;isolation:isolate}
+.nav-item.active{background:transparent}
+.nav-pill{position:absolute;inset:0;border-radius:3px;background:#2a3a33;z-index:-1}
+.welcome-orbit{animation:nm-orbit 40s linear infinite}
+
+/* ---------- Matches ---------- */
+.capacity-bar i{transform-origin:left center;animation:nm-fill 700ms var(--ease-out) 250ms both}
+.match-filters{animation:nm-fade var(--dur-long) var(--ease-out) 120ms both}
+
+/* ---------- Group page, chat, booking ---------- */
+.chat-card{animation:nm-rise var(--dur-long) var(--ease-out) var(--stagger-block) both}
+.chat-msg{animation:nm-slide-l var(--dur-short) var(--ease-out) both}
+.chat-msg.chat-mine{animation-name:nm-slide-r}
+.hotel-photo{animation:nm-fade var(--dur-long) var(--ease-out) both}
+.confirm-dialog[open]{animation:nm-pop var(--dur-long) var(--ease-out) both}
+.confirm-dialog[open]::backdrop{animation:nm-fade var(--dur-short) var(--ease-out) both}
+.booked-card{animation:nm-pop 520ms var(--ease-out) both}
+.booked-card .status-badge{display:inline-block;animation:nm-stamp var(--dur-short) var(--ease-out) 380ms both}
+.solo-handoff{animation:nm-rise var(--dur-long) var(--ease-out) 160ms both}
+.matches-empty{animation:nm-rise var(--dur-long) var(--ease-out) both}
+
+/* ---------- Reduced motion: end states at once, loops stop ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after,::backdrop{animation-duration:1ms!important;animation-delay:0ms!important;animation-iteration-count:1!important;transition-duration:1ms!important;scroll-behavior:auto!important}
+  .ticker-track,.welcome-orbit{animation:none!important}
+  .skeleton{animation:none!important}
+}
