@@ -2,7 +2,9 @@ import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { GENDER_COMPOSITIONS, type CatalogResponse, type GenderComposition, type Match, type MatchFilters, type Search } from '@nomad/shared';
 import { BookSoloLink } from '../components/BookSoloLink';
+import { AnimatePresence, motion } from 'motion/react';
 import { Logo } from '../components/Logo';
+import { DUR, EASE_IN, EASE_OUT } from '../components/Motion';
 import { ApiError } from '../lib/api';
 import { useCatalog } from '../lib/useCatalog';
 import { useSearchMatches } from '../lib/useSearch';
@@ -85,7 +87,7 @@ export function MatchesPage() {
             ) : data.matches.length === 0 ? (
               <FilteredEmpty onClear={() => updateFilters({ interests: [], gender: 'ANY' })} />
             ) : (
-              <><p className="filter-count">{hasFilters ? `Showing ${data.matches.length} of ${data.totalMatches} groups` : `${data.totalMatches} groups found`}</p><div className="match-list">{data.matches.map((match) => <MatchCard key={match.groupId} match={match} searchId={data.search.id} timeZone={timeZone} labels={labels} requestState={requestStates[match.groupId] ?? 'idle'} requestError={requestErrors[match.groupId] ?? ''} onRequestStateChange={(state, error = '') => { setRequestStates((current) => ({ ...current, [match.groupId]: state })); setRequestErrors((current) => ({ ...current, [match.groupId]: error })); }} />)}</div></>
+              <><p className="filter-count">{hasFilters ? `Showing ${data.matches.length} of ${data.totalMatches} groups` : `${data.totalMatches} groups found`}</p><div className="match-list"><AnimatePresence initial>{data.matches.map((match, index) => <MatchCard key={match.groupId} index={index} match={match} searchId={data.search.id} timeZone={timeZone} labels={labels} requestState={requestStates[match.groupId] ?? 'idle'} requestError={requestErrors[match.groupId] ?? ''} onRequestStateChange={(state, error = '') => { setRequestStates((current) => ({ ...current, [match.groupId]: state })); setRequestErrors((current) => ({ ...current, [match.groupId]: error })); }} />)}</AnimatePresence></div></>
             )}
           </>
         )}
@@ -108,7 +110,7 @@ function SearchSummary({ search, count, timeZone }: { search: Search; count: num
     <div className="matches-header">
       <div>
         <p className="eyebrow">Your matches · M4</p>
-        <h1>{count} {count === 1 ? 'group' : 'groups'} in<br /><em>{search.city}.</em></h1>
+        <h1><motion.span style={{ display: 'inline-block' }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE_OUT }}>{count} {count === 1 ? 'group' : 'groups'} in</motion.span><br /><motion.em style={{ display: 'inline-block' }} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.08, ease: EASE_OUT }}>{search.city}.</motion.em></h1>
       </div>
       <dl className="search-summary">
         <div><dt>Dates</dt><dd>{formatDate(search.checkIn, timeZone)} → {formatDate(search.checkOut, timeZone)}</dd></div>
@@ -121,7 +123,7 @@ function SearchSummary({ search, count, timeZone }: { search: Search; count: num
   );
 }
 
-function MatchCard({ match, searchId, timeZone, labels, requestState, requestError, onRequestStateChange }: { match: Match; searchId: string; timeZone?: string; labels: Map<string, CatalogResponse['interests'][number]['label']>; requestState: 'idle' | 'pending' | 'approved' | 'rejected'; requestError: string; onRequestStateChange: (state: 'idle' | 'pending' | 'approved' | 'rejected', error?: string) => void }) {
+function MatchCard({ index = 0, match, searchId, timeZone, labels, requestState, requestError, onRequestStateChange }: { index?: number; match: Match; searchId: string; timeZone?: string; labels: Map<string, CatalogResponse['interests'][number]['label']>; requestState: 'idle' | 'pending' | 'approved' | 'rejected'; requestError: string; onRequestStateChange: (state: 'idle' | 'pending' | 'approved' | 'rejected', error?: string) => void }) {
   const request = useRequestToJoin();
   const shared = match.sharedInterests.map((id) => labels.get(id) ?? id).join(', ');
   const fill = Math.min(100, Math.round((match.membersCount / match.maxSize) * 100));
@@ -131,7 +133,13 @@ function MatchCard({ match, searchId, timeZone, labels, requestState, requestErr
     catch (err) { onRequestStateChange(requestState, err instanceof ApiError ? err.body.message : 'Could not send the request.'); }
   }
   return (
-    <article className="match-result">
+    <motion.article
+      className="match-result"
+      layout="position"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: DUR.long, delay: Math.min(index, 7) * 0.06, ease: EASE_OUT } }}
+      exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.18, ease: EASE_IN } }}
+    >
       <div className="match-result-main">
         <span className="group-list-city">{match.city} · {formatDate(match.checkIn, timeZone)} → {formatDate(match.checkOut, timeZone)}</span>
         <h3>{match.name}</h3>
@@ -147,7 +155,7 @@ function MatchCard({ match, searchId, timeZone, labels, requestState, requestErr
         <button className="button button-small" type="button" onClick={sendRequest} disabled={request.isPending || requestState !== 'idle'}>{request.isPending ? 'Sending…' : requestState === 'pending' ? 'Request pending' : requestState === 'approved' ? 'Joined' : requestState === 'rejected' ? 'Request declined' : 'Request to join'}</button>
         {requestError && <small className="request-error" role="alert">{requestError}</small>}
       </div>
-    </article>
+    </motion.article>
   );
 }
 

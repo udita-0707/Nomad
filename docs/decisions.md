@@ -163,3 +163,11 @@ Entry format:
 - Why: a useful exit for solo travellers with no API, no schema change and no stored data.
 - Trade-off / revisit if: we can't tell whether they booked, and Booking.com may change its URL parameters; revisit with a partner integration (listed as future scope in README).
 - Files: apps/web/src/{lib/bookingHandoff.ts,components/BookSoloLink.tsx,pages/Matches.tsx,pages/GroupPlan.tsx,styles.css}, README.md, docs/decisions.md
+
+## D-021 | 2026-11-16 12:11 | Motion layer for the web app (Motion + CSS keyframes)
+- Context: Aman asked for an animated frontend that keeps every page's behaviour and API calls; the per-page plan is in docs/frontend-design-prompt.md.
+- Decision: kept the brand and layouts and added motion on top: the `motion` package for presence, shared layout and counting (landing hero, dashboard tab pill and cross-fade, request rows leaving, match cards re-laying on filter changes, route fade), and a separate motion.css of transform/opacity keyframes for list and form entrances, dialog, chat and the booked stamp. Reduced motion shows end states at once.
+- Rejected: a full visual re-layout (bigger diff, demo is close), framer-motion's old package name (same library, older API), animating via JS everywhere (CSS is cheaper and needs no markup change).
+- Why: visible life on every page with almost no changes to component logic, so existing flows keep working.
+- Trade-off / revisit if: adds the Motion library to the main bundle (no code-splitting yet); the eyebrow labels and other Hallmark copy/label findings were left as found. Revisit with a full redesign after the demo.
+- Files: apps/web/src/{motion.css,main.tsx,App.tsx,components/Motion.tsx,pages/Landing.tsx,pages/Dashboard.tsx,pages/Matches.tsx}, apps/web/package.json, package-lock.json, docs/frontend-design-prompt.md, docs/decisions.md

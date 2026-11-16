@@ -11,9 +11,11 @@ import { GroupPlanPage } from './pages/GroupPlan';
 import { GroupMembersPage } from './pages/GroupMembers';
 import { TravellerProfilePage } from './pages/TravellerProfile';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { RouteTransition } from './components/Motion';
 
 export function App() {
   return (
+    <RouteTransition>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/signup" element={<SignUp />} />
@@ -84,5 +86,6 @@ export function App() {
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </RouteTransition>
   );
 }
